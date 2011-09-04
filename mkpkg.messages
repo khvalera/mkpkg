@@ -1,0 +1,639 @@
+lang=`echo $LANG | cut -b 1,2`
+show_message() {
+case $1 in 
+
+##############
+SHOW_USAGE)############################################################
+##############
+
+	case $lang in
+	ru)
+cat <<EOFUSAGE
+mkpkg - скрипт bash для генерации SlackBuild по файлу шаблона ABUILD.
+Внутренняя версия скрипта $internal_version
+Без опций командной строки попытается загрузить ABUILD из текущей директории.
+Можно использовать следующие опции командной строки:
+ -bt --build-tree=foo.build_tree.tar.xz: использовать дерево сборки
+ -bv --bump-version=NEW_VER	: изменить текущую версию в ABUILD
+				  на NEW_VER
+ -bb --bump-build=NEW_BUILD	: изменить текущий билд в ABUILD
+				: на NEW_BUILD
+ -ib				: автоматически увеличить номер билда на единицу
+ -ubt --unpack_build_tree=PKG   : извлечь из пакета PKG дерево сборки
+ -i --install			: установить пакет после сборки (только от ROOT)
+ -si --sudo-install		: установить пакет после сборки (необходимо настроить sudo!)
+ -h --help 			: показать эту справку и выйти
+ -nc --no-cleanup 		: не очищать временные директории после сборки 
+ r 				: не очищать временные директории перед сборкой 
+				  и не распаковывать исходники.
+				  Полезно для возобновления прервавщейся из-за
+				  ошибки сборки
+ -c --copy-abuild 		: скопировать пустой шаблон в текущую директорию
+				  Дополнительным параметром можно указать имя
+				  шаблона системы сборки. Список имён:
+				    cmake qmake python perl waf scons
+				  По-умолчанию используется autotools
+				  Для пустого шаблона используйте шаблон 'c'
+ -wd				: имя директории, где будет проходить сборка пакета
+ -pod				: имя директории, куда будет помещён готовый пакет
+ -wdm				: режим выбора временных каталогов:
+				  cwd - все операции проходят в текущем каталоге
+				  remote - используются пути из конфигурационного файла
+				  auto - пути из конфигурационного файла используются
+					только при сборке из дерева (build tree)
+
+ -ccd				: очистить директорию с исходниками и выйти
+ -cpd				: очистить директорию с готовыми пакетами и выйти
+
+ -po --parent-only		: собирает только основной пакет в мультипакетных ABUILD
+ -ad --append-deps		: добавлять зависимости пакета (после сборки) в ABUILD
+				  сборки в качестве build_deps
+
+ -64 пакет|директория		: конвертировать 32битный пакет в 64 битный без замены
+				  директорий (для пакетов wine,skype).
+ -c64 пакет|директория		: конвертировать 32битный пакет в 64битный пакет с
+				  заменой директорий (compat32 пакеты)
+
+ -sv --skip-validate		: выключить валидацию пакета после сборки
+ -sgd --skip-gendeps		: не генерировать зависимости для пакета
+
+ -v --version 			: показать версию скрипта и выйти
+ -d --debug			: включить отладку (set -xv). Так же включается -nc
+EOFUSAGE
+;;
+#	    uk)
+	    *)
+cat << EOFUSAGE
+mkpkg - a bash script, designed to generate a SlackBuild according to ABUILD file.
+Internal version $internal_version.
+Without options it will try to load ABUILD from current directory
+You can use following options:
+ -bt --build-tree=foo.build_tree.tar.xz : build package from specified
+					  build tree archive
+ -bv --bump-version=NEW_VER		: change package version to
+					  NEW_VER in ABUILD
+ -bv --bump-build=NEW_BUILD		: change package build to
+					  NEW_BUILD in ABUILD
+ -ib					: auto increase build number by 1
+ -ubt --unpack-build-tree=PKG		: unpack build tree archive from
+					: package PKG					  
+ -i --install				: install package after building (need ROOT priv.)
+ -si --sudo-install			: install package after building (configure sudo first!)
+ -h --help 				: show this help and exit
+ -nc --no-cleanup 			: do not clear temp directories after
+					  build
+ -r 					: do not clean temp directoruies before
+					  build, and do not unpack sources.
+					  Useful when compiling failed due to 
+					  errors.
+ -c --copy-abuild 			: copy an empty ABUILD template to 
+					  current directory. You can specify 
+					  expected build system with second 
+					  parameter, which is template name. 
+					  List of templates:
+					  cmake python qmake perl waf scons
+					  autotools is the default.
+					  To specify empty tepmplate type 'c' as
+					  parameter
+ -wd					: temporary dir where package will be build
+ -pod					: directory where compiled package will be placed
+ -wdm					: switch temporary dirs in
+					    cwd - all operations are placed in current dir
+					    remote - use dirs from config file
+					    auto - use dir from config if building
+						from build tree
+ -ccd					: clean cache dir with sources and exit
+ -cpd					: clean dir with compiled packages and exit
+ -od --overwritre-slackdesc 		: overwrite slack-desc with data from
+					  ABUILD
+ -po --parent-only			: build only first package in multipackage ABUILD
+ -ad --append-deps			: add package dependencies (after building)
+					  into ABUILD as build_deps
+ -64 package|dir			: convert 32bit package to 64 without
+					  changing dirs (for wine,skype)
+ -c64 package|dir			: convert 32bit package to 64 with
+					  changing dirs (compat32 packages)
+ -sv --skip-validate			: do not validate package after build
+ -sgd --skip-gendeps			: do not generate dependencies
+ -v --version 				: show script version and exit
+ -d --debug				: turn on debug (set -vx). -nc option is on
+EOFUSAGE
+;;
+esac
+;;
+
+#############
+MKPKG_VER)############################################################
+#############
+case $lang in
+ru) echo "Версия скрипта ${MKPKG_VER}"
+    echo "Мейнтейнер: ${mn} ; Электропочта: ${me}"
+	;;
+#uk) echo "Версія скрипта $internal_version" ;;
+*) echo "mkpkg script version ${MKPKG_VER}"
+   echo "Maintainer: ${mn} ; E-Mail: {me}"
+    ;;
+esac
+;;
+
+################
+FILE_NOT_FOUND)#######################################################
+################
+case $lang in 
+ru) echo "Файл \"$2\" не найден";;
+uk) echo "Файл \"$2\" не знайдено";;
+*) echo "File \"$2\" not found";;
+esac
+;;
+
+###############
+UNKNOWN_ARG)##########################################################
+###############
+case $lang in
+ru) echo "Неизвестный аргумент $2";;
+uk) echo "Невідомий аргумент $2";;
+*) echo "Unknown argement $2";;
+esac
+;;
+
+###############
+UNKNOWN_CUSTOM_OPT*)##########################################################
+###############
+case $lang in
+ru) echo "Неизвестная переменная '$2' в custom_opts";;
+#uk) echo "Невідомий аргумент $2";;
+*) echo "Unknown var '$2' in custom_opts";;
+esac
+;;
+
+
+
+##############
+NO_ABUILD)##########################################################
+##############
+case $lang in
+ru) echo "Файл ABUILD не найден в текущей директории";;
+uk) echo "Файл ABUILD не знайдений у поточній директорії";;
+*) echo "No ABUILD file found in current directory";;
+esac;;
+
+###############
+VAR_NOT_SET)##########################################################
+###############
+case $lang in
+ru) echo "Переменная \"$2\" не установлена";;
+uk) echo "Змінна \"$2\" не встановлена";;
+*) echo "Variable \"$2\" not set";;
+esac;;
+
+#################
+NO_BUILD_FUNC)########################################################
+#################
+case $lang in
+ru) echo "Функция build() не найдена";;
+uk) echo "Функція build() не знайдена";;
+*) echo "Function build() not found";;
+esac;;
+
+################
+I_M_NOT_ROOT)##########################################################
+################
+case $lang in
+ru) echo "Необходимы права суперпользователя root";;
+uk) echo "Необхідні права суперкористувача root";;
+*) echo "You need to be root";;
+esac;;
+
+#################
+ARCH_MISMATCH)########################################################
+#################
+case $lang in
+ru) echo "Ошибка выбора архитектуры. Установлена $2, в то время, как используется $3. Проверьте ваш ABUILD.";;
+uk) echo "Помилка вибору архітектури. Встановлено $2, в той час, як використовується $3. Перевірте ваш ABUILD.";;
+*) echo "ARCH mismatch: got $2 while we have $3. Check your ABUILD";;
+esac;;
+
+###########
+NO_DESC)##############################################################
+###########
+case $lang in
+ru) echo "Файл slack-desc не найден, и переменная shortdesc не установлена. Описание пакета недоступно.";;
+uk) echo "Файл slack-desc не знайдений, і змінна shortdesc не встановлена. Опис пакета недоступний.";;
+*) echo "slack-desc not found, and shortdesc var is not set. Fix it, please";;
+esac;;
+
+############
+SB_READY)#############################################################
+############
+case $lang in 
+ru) echo "----------SlackBuild успешно создан!----------";;
+uk) echo "----------SlackBuild успішно створений!----------";;
+*) echo "----------SlackBuild created!-----------";;
+esac;;
+
+###########
+NO_LONG)##############################################################
+###########
+case $lang in
+ru) echo "В переменной \"tags\" отсутствует длинный тег";;
+uk) echo "У змінної \"tags\" відсутній довгий тег";;
+*) echo "There is no long tag in \"tags\" variable";;
+esac;;
+
+###########
+NO_SHORT)##############################################################
+###########
+case $lang in
+ru) echo "В переменной \"tags\" отсутствует короткий тег";;
+uk) echo "У змінної \"tags\" відсутній короткий тег";;
+*) echo "There is no short tag in \"tags\" variable";;
+esac;;
+
+###########
+BAD_DASH)##############################################################
+###########
+case $lang in
+ru) echo "В значениях переменных \"pkgver\" и \"pkgbuild\"  тире недопустимо, но найдено \"$2\"";;
+uk) echo "У значеннях змінних \"pkgver\" і \"pkgbuild\" тире неприпустимо, але знайдено \"$2\"";;
+*) echo "There is no dash allowed in \"pkgver\" and \"pkgbuild\" variables, but \"$2\" was found";;
+esac;;
+
+###########
+UNKNOWN_TAG)##############################################################
+###########
+case $lang in
+ru) echo "Неизвестный тег \"$2\"";;
+uk) echo "Невідомий тег \"$2\"";;
+*) echo "Unknown tag \"$2\"";;
+esac;;
+
+###########
+BUILD_DEP_UNRESOLVED)##############################################################
+###########
+case $lang in
+ru) echo "Неудовлетворённые зависимости: $2. Найдена версия $3.";;
+uk) echo "Незадоволені залежності: $2. Знайдена версія $3.";;
+*) echo "Unresolved dependencies: $2. Found $3.";;
+esac;;
+
+###########
+BUILD_DEP_NOT_FOUND)##############################################################
+###########
+case $lang in
+ru) echo "Неудовлетворённые зависимости: $2. Пакет не найден.";;
+uk) echo "Незадоволені залежності: $2. Пакет не знайдений.";;
+*) echo "Unresolved dependencies: $2. Package not found.";;
+esac;;
+
+
+###########
+BT_BAD_FILE_NAME)##############################################################
+###########
+case $lang in
+ru) echo "Имя файла архива дерева сборки должно содержать \".build_tree.tar.xz\", а у Вас $2";;
+uk) echo "Файл архіву дерева збирання повинен містити \".build_tree.tar.xz\", а у Вас $2";;
+*) echo "Build tree archive name must contains \".build_tree.tar.xz\", but you have $2";;
+esac;;
+
+
+###########
+BT_NO_ABUILD)##############################################################
+###########
+case $lang in
+ru) echo "В архиве дерева сборки не найден файл ABUILD";;
+uk) echo "В архіві дерева збірки не знайдений файл ABUILD";;
+*) echo "No ABUILD file found in your build tree archlive";;
+esac;;
+
+
+###########
+BT_NO_ARCHIVE)##############################################################
+###########
+case $lang in
+ru) echo "$2 не является архивом";;
+uk) echo "$2 не є архівом";;
+*) echo "$2 is not an archive";;
+esac;;
+
+###########
+BAD_PROVIDE)##############################################################
+###########
+case $lang in
+ru) echo "Имя пакета должно содержать значение переменной provides";;
+uk) echo "Ім'я пакету має містити значення змінної provides";;
+*) echo "Package name must contains provides variable value";;
+esac;;
+
+###########
+PKG_HASNT_BT)##############################################################
+###########
+case $lang in
+ru) echo "В пакете нет дерева сборки";;
+uk) echo "У пакеті немає дерева збирання";;
+*) echo "There is no build tree archive in this package";;
+esac;;
+
+###########
+NO_CONFIG_FILE)##############################################################
+###########
+case $lang in
+ru) echo "Не найден файл конфигурации /etc/mkpkg.conf";;
+#uk) echo "У пакеті немає дерева збирання";;
+*) echo "Config file /etc/mkpkg.conf not found";;
+esac;;
+
+###########
+DEPRECATE_MOPSBUILD)##############################################################
+###########
+case $lang in
+ru) echo "Устаревшее название скрипта сборки MOPSBUILD. Он будет переименован в ABUILD";;
+#uk) echo "У пакеті немає дерева збирання";;
+*) echo "Deprecated build script name MOPSBUILD. It will be renamed to ABUILD";;
+esac;;
+
+
+###########
+WORK_DIR)##############################################################
+###########
+case $lang in
+ru) echo "Изменение рабочей директории на $2";;
+#uk);;
+*) echo "Changing working dir to $2";;
+esac;;
+
+###########
+CACHE_DIR_NOT_SET)##############################################################
+###########
+case $lang in
+ru) echo "Не установлена переменная 'src_cache_dir' в /etc/mkpkg.conf, а использование кеша включено. Либо установите директорию, либо отключите использование кеша.";;
+#uk);;
+*) echo "'src_cache_dir' variable is not set, but cache using is enabled. Either set it, or disable cache using";;
+esac;;
+
+###########
+CACHE_DIR_NOT_WRITABLE)##############################################################
+###########
+case $lang in
+ru) echo "Директория кеша $2 недоступна для записи";;
+#uk);;
+*) echo "Cache directory $2 is not writable";;
+esac;;
+
+###########
+NO_INFO_IN_XML)##############################################################
+###########
+case $lang in
+ru) echo "Не установлены имя и почта мейнтейнера в настройках mpkg. Установите их с помощью mpkg-maintainer";;
+#uk)
+*) echo "No maintainer name and email specified in mpkg settings. Set it with mpkg-maintainer";;
+esac;;
+
+###########
+BT_DIR_NOT_WRITABLE)##############################################################
+###########
+case $lang in
+ru) echo "Временная директория $2 не доступна для записи";;
+#uk) echo "У пакеті немає дерева збирання";;
+*) echo "Temp directory $2 is not writable";;
+esac;;
+
+###########
+BAD_DESC*)##############################################################
+###########
+case $lang in
+ru) echo "Ошибка описания пакета '$2': длина слова в описании не может превышать 79 символов";;
+#uk)
+*) echo "There is an error in a package '$2' description: single word can't be longer than 79 simbols";;
+esac;;
+
+###########
+BUILD_ERROR)##############################################################
+###########
+case $lang in
+ru) echo "!!!!----[Произошла ошибка при сборке пакета $pkgname]----!!!!";;
+#uk)
+*) echo "!!!!----[Error building package $pkgname]----!!!!";;
+esac;;
+
+###########
+BAD_WDM*)#######################################################
+###########
+case $lang in
+ru) echo "Некорректный режим -wdm $2. Допускаются только один из режимов remote|cwd|auto";;
+#uk)
+*) echo "Invalid directory mode -wdm $2. Must be one of remote|cwd|auto";;
+esac;;
+
+###########
+DEPRECATED_VAR*)#######################################################
+###########
+case $lang in
+ru) echo "!!!!--[Внимание! Используется устаревшая переменная $2 в ABUILD]--!!!!";;
+#uk)
+*) echo "!!!!--[Warning! Deprecated variable $2 in ABUILD]--!!!!";;
+esac;;
+
+
+###########
+SOURCE_EXTR_FAILED)##############################################################
+###########
+case $lang in
+ru) echo "Ошибка при распаковке исходников!";;
+#uk)
+*) echo "Error unpacking sources!";;
+esac;;
+
+
+###########
+NO_PKG_FUNC*)##############################################################
+###########
+case $lang in
+ru) echo "В ABUILD не найдена функция, указанная в переменной 'pkglist': $2";;
+#uk)
+*) echo "Function, specified in 'pkglist' variable not found in ABUILD: $2";;
+esac;;
+
+###########
+ERROR_MAKING_PACKAGE_DIR_DIR*)##############################################################
+###########
+case $lang in
+ru) echo "Ошибка создания директории для размещения готовых пакетов $2";;
+#uk)
+*) echo "Error creating directory for compiled packages $2";;
+esac;;
+
+###########
+ERROR_MAKING_BT_DIR*)##############################################################
+###########
+case $lang in
+ru) echo "Ошибка создания временной директории $2";;
+#uk)
+*) echo "Error creating temp directory :$2";;
+esac;;
+
+
+###########
+NO_pkg_files*)##############################################################
+###########
+case $lang in
+ru) echo "Не установлена переменная 'pkg_files' в функции $2";;
+#uk)
+*) echo "'pkg_files' variable is not set in $2 function";;
+esac;;
+
+
+###########
+NO_pkg_file_EXIST*)##############################################################
+###########
+case $lang in
+ru) echo "Директория '$3', установленная в функции $2 не существует";;
+#uk)
+*) echo "Directory '$3', specified in $2 function does not exist";;
+esac;;
+
+
+###########
+ERR_STARTDIR_PKG)##############################################################
+###########
+case $lang in
+ru) echo "В вашем ABUILD найдено сочетание \"\$startdir/pkg\" или его вариант. Замените его на \"\${pkgdir}\"";;
+#uk)
+*) echo "There is \"\$startdir/pkg\" or smth like that was found in your ABUILD. Replace it with \"\${pkgdir}\"";;
+esac;;
+
+###########
+ERR_STARTDIR_SRC)##############################################################
+###########
+case $lang in
+ru) echo "В вашем ABUILD найдено сочетание \"\$startdir/src\" или его вариант. Замените его на \"\${srcdir}\"";;
+#uk)
+*) echo "There is \"\$startdir/src\" or smth like that was found in your ABUILD. Replace it with \"\${srcdir}\"";;
+esac;;
+
+
+###########
+BEGIN_UNPACK*)##############################################################
+###########
+case $lang in
+ru) echo "Распаковывается файл $2. Пожалуйста, подождите.";;
+#uk)
+*) echo "File $2 is being unpacked now. Please wait.";;
+esac;;
+
+###########                                                                                               
+PWD_NOT_WRITABLE)##############################################################                              
+###########                                                                                               
+case $lang in                                                                                             
+ru) echo "$(pwd) не доступна для записи.";;                                              
+#uk)                                                                                                      
+*) echo "$(pwd) not writable";;                                                   
+esac;;
+
+
+###########
+BAD_FARM_ARCH*)##############################################################
+###########
+case $lang in
+ru) echo "На Сборочном пакетном комбинате установлена некорректная архитектура $2. Проверьте локальный конфигурационный файл mkpkg";;
+#uk)
+*) echo "Build Farm has incorrect arch type $2. Check local mkpkg config";;
+esac;;
+
+###########
+TOO_MANY_TAGS*)##############################################################
+###########
+case $lang in
+ru) echo "Пакет $2 имеет зашкаливающее количество тегов (>2). Теги 'x86' и 'proptietary' не считаются. ";;
+#uk)
+*) echo "Package $2 has too many tags (>2). 'x86' and 'proprietary' tags are not counted.";;
+esac;;
+
+###########
+PACKAGE_DIR_NOT_WRITABLE*)##############################################################i
+###########
+case $lang in
+ru) echo "Директория для готовых пакетов $2 не доступна для записи.";;
+#uk)
+*) echo "Package dir $2 is write protected.";;
+esac;;
+
+###########
+BAD_REMOTE_DIR*)##############################################################i
+###########
+case $lang in
+ru) echo "Неверный режим work_dir_mode: $2";;
+#uk)
+*) echo "Wrong work_dir_mode setting: $2";;
+esac;;
+
+
+############
+YES_OR_NO)##############################################################i
+###########
+case $lang in
+ru) echo "Введите \"yes\" или \"no\"";;
+#uk)
+*) echo "Please enter \"yes\" or \"no\"";;
+esac;;
+
+##########
+ARE_YOU_SURE)##############################################################i
+###########
+case $lang in
+ru) echo "Обнаружен lock-файл. Вероятно, скрипт сборки с этим ABUILD уже запущен. Продолжить всё равно? (yes/no)";;
+#uk)
+*) echo "Lock file found. May be another mkpkg script already running with this ABUILD. Continue anyway? (yes/no)";;
+esac;;
+
+##########
+MKPKG_LOCKED)##############################################################i
+###########
+case $lang in
+ru) echo "Обнаружен lock файл. Вероятно, скрипт сборки с этим ABUILD уже запущен.";;
+#uk)
+*) echo "Lock file found. May be another mkpkg script already running with this ABUILD.";;
+esac;;
+
+##########
+NOT_A_NUMBER*)##############################################################i
+###########
+case $lang in
+ru) echo "Неизвестный параметр patch_opts у патч файла '$2'";;
+#uk)
+*) echo "Invalid patch_opts paramert at patch file '$2'";;
+esac;;
+
+##########
+LATIN_ONLY*)##############################################################i
+############
+case $lang in
+ru) echo "В $2 пакета разрешено использовать только латинские буквы. Ошибка в символе $3";;
+#uk)
+*) echo "Only latin letters are allowed in $2 package description .Error in letter number $3";;
+esac;;
+
+##########
+WRITING_TO*)##############################################################i
+############
+case $lang in
+ru) echo "Файл будет записан в директорию $2";;
+#uk)
+*) echo "File will be written in $2";;
+esac;;
+
+##########
+CANT_INCREMENT_BUILD*)###################################################
+############
+case $lang in
+ru) echo "Невозможно увеличить номер билда $2";;
+#uk)
+*) echo "Can't increment build number $2";;
+esac;;
+
+
+######################end
+*)
+echo "Unknown string $1"; exit 1
+;;
+esac
+}

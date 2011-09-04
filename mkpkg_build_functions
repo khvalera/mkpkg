@@ -1,0 +1,859 @@
+#!/bin/bash
+echo "-${startdir}-"
+. ${startdir}/ABUILD
+
+r_startdir="${startdir}"
+r_pkgname=${pkgname} #will deprecate
+p_pkgname=${pkgname}
+p_pkgver=${pkgver}
+p_adddep="${adddep}"
+p_arch=${arch}
+p_pkgdir=$startdir/${pkgname}
+p_shortdesc="${shortdesc}"
+if [ -n "${longdesc}" ]; then
+	p_longdesc=("$longdesc")
+fi
+pkgdir=${p_pkgdir}
+
+#==================================
+# begin prepare block
+#==================================
+
+get_extract_source() {
+	if [ -n "${source}" ]; then 
+		d_echo "source processing"
+		mkdir -p ${srcdir}
+		for it in `seq 0 $((${#source[@]}-1))`; do
+			set -- ${source[it]}
+			item=$1
+			d_echo "   item ${item}"
+			local ifn=""
+			if [ "$2" == "n" -o "$3" == "n" ]; then
+				#do not unpack
+				ifn=n
+			fi
+
+			cd $srcdir || exit 1
+			local loc_source=$(basename $item)
+
+			if [ "$2" == "o" -o "$3" == "o" ]; then
+				#overwrite anyway
+				rm -rf ${srcache}/${loc_source}
+			fi
+
+			loc_source_arr[${#loc_source_arr[@]}]=${loc_source}
+			loc_source_files+="$(basename ${loc_source}) "
+
+			if [ -f ${srcache}/$loc_source ]; then
+					item=$loc_source
+			fi
+
+			local protocol=$(echo "$item" | sed 's|:.*||')
+			d_echo "   Discover source file ${item} download protocol as '$protocol'"
+			case $protocol in
+				http|ftp|https)
+					if [ ! ${ext_arg} ]; then
+						wget -c --no-check-certificate ${wgetopts} -O ${srcache}/${loc_source}.part $item  || exit 1
+						mv ${srcache}/${loc_source}.part ${srcache}/${loc_source}
+						if [ ! "$ifn" = "n" ]; then
+							unpack ${srcache}/$loc_source  || exit 1
+						fi
+					fi
+					;;
+				svn)
+					cd ${srcache}
+					if [ ! ${ext_arg} ]; then
+						item=$(echo "$item" | sed 's/^svn:*//')
+						svn checkout $svn_opts $item ${pkgname}.src
+						cp -a -r ${srcache}/${pkgname}.src ${srcdir}					
+					fi
+					if [ ! ${strict_version} ]; then
+						cd ${pkgname}.src || exit 1
+						pkgver+=_svn`svn info | grep Revi | cut -d ":" -f2 | cut -c2-`
+						cd - || exit 1
+					fi
+					cd -
+					;;
+				git)
+					cd ${srcache} || exit 1
+					if [ ! ${ext_arg} ];then 
+						item=$(echo "$item" | sed 's/^git:*//')
+						if [ ! -d ${pkgname}.src ]; then
+							git clone $item ${pkgname}.src
+						else
+							cd ${pkgname}.src
+							git pull
+						fi
+						cp -a -r ${srcache}/${pkgname}.src ${srcdir}
+					fi
+					if [ ! ${strict_version} ]; then
+						pkgver+=_git`date "+%Y%m%d"`
+					fi
+					cd --
+					;;                           
+				hg)
+					cd ${srcache}
+					if [ ! ${ext_arg} ];then
+						#cd ${srcache}
+						item=$(echo "$item" | sed 's/^hg:*//')
+						if [ ! -d ${pkgname}.src ]; then
+							hg clone $item ${pkgname}.src
+						else
+							cd ${pkgname}.src
+							hg pull && hg update  
+						fi
+						cp -a -r ${srcache}/${pkgname}.src ${srcdir}
+					fi
+					if [ ! ${strict_version} ]; then
+						pkgver+=_hg`date "+%Y%m%d"`
+					fi
+					cd -
+					;;                           
+				bzr)
+					cd ${srcache}
+					if [ ! ${ext_arg} ];then
+						cd ${srcache}
+						item=$(echo "$item" | sed 's/^bzr:*//')
+						if [ ! -d ${pkgname}.src ]; then
+							bzr branch $item ${pkgname}.src
+						else
+							cd ${pkgname}.src
+							bzr merge
+							if [ "$?" != "0" ]; then 
+								cd ..
+								d_echo "deleting corrupted bzr archive"
+								rm -rf ${pkgname}.src
+								bzr branch $item ${pkgname}.src
+							fi
+						fi
+						cp -a -r ${srcache}/${pkgname}.src ${srcdir}
+					fi
+					if [ ! ${strict_version} ]; then
+						cd ${srcache}/${pkgname}.src || exit 1
+						local bzr_rev=mkpkg_${pkgname}
+						bzr log -r -1 lp:${pkgname} | grep revno: | cut -d " " -f2 > ${bzr_rev}
+						pkgver+=_bzr`cat ${bzr_rev}`
+						rm -f ${bzr_rev}
+						echo "setting to ${pkgver}"
+						cd -
+					fi
+					cd -
+					;;
+
+				*)
+					if [ ! "${ifn}" = "n" -a -z "${ext_arg}" ]; then
+						unpack ${srcache}/$loc_source || exit 1
+					fi
+					;;
+			esac
+			if [ "$(parent_package)" -a ! ${strict_version} ]; then 
+				modif_version=${pkgver}
+				
+			fi
+		done
+		loc_source_count=${#source[@]}
+	fi
+}
+ 
+unpack()
+{
+	d_echo "unpack() $1"
+	local file_2_unpack="$1"
+	#local state=0
+	cd ${srcdir}
+	local file_type=$(file -biz ${file_2_unpack})
+	unset cmd
+	case "$file_type" in
+		*application/x-tar*)
+		cmd="tar -xf" ;;
+		*application/zip*)
+		cmd="unzip" ;;
+		*application/x-zip*)
+		cmd="unzip" ;;
+		*application/x-gzip*)
+		cmd="gunzip -d -f" ;;
+		*application/x-bzip*)
+		cmd="bunzip2 -f" ;;
+		*application/x-rar*)
+		cmd="unrar e" ;;
+	esac
+	if [ "$cmd" != "" ]; then
+		show_message BEGIN_UNPACK ${file_2_unpack}
+		$cmd ${file_2_unpack}
+		chown -R root:root .
+		chmod -R u+w,go+r-w,a-s .
+		if [ ! $? -eq 0 ]; then
+			show_message SOURCE_EXTR_FAILED
+			rm -f ${file_2_unpack}
+			exit 1
+		fi
+	fi
+}
+
+#get num for -j option
+get_numjobs()
+{
+	d_echo "get_numjobs"
+	if [ -z "${numjobs}" ]; then
+		x=$(cat /proc/cpuinfo | grep processor | wc -l)
+		if [ -n "$x" ]; then 
+			let "numjobs=x+1"
+		else
+			numjobs=2
+		fi
+	fi
+}
+
+#change curr dir to first dir in unpacked source
+go_src_dir() {
+	if [ -d "${srcdir}" ]; then 
+		local src_subdirs="$1"
+		cd ${srcdir}
+		local dirs=$(ls -1 -F | grep / | sed 's/\///g' | sed q)
+		if [ -n "${dirs}" ]; then
+			cd ${dirs}
+			if [ -n "${src_subdir}" -a -d $(pwd)/${src_subdir} ]; then
+				cd $(pwd)/${src_subdir}
+			fi
+		fi
+	fi
+}
+
+burn_patches() {
+	d_echo "burn_patchces()"
+	if [ -d $startdir/patches -a "${RESUME}" != "1" ]; then
+		local curr_dir=`pwd`
+		cd $startdir/patches
+		local patch_list=`ls -1 *.patch *.patch.gz *.diff *.diff.gz 2>/dev/null`
+		cd $curr_dir
+	
+		for file in $patch_list; do
+			local p=1
+			local minus_t="-N"
+			if [ -n "$patch_opts" ]; then
+				for patch_item in `seq 0 $((${#patch_opts[@]}-1))`; do
+					set ${patch_opts[patch_item]}
+
+					if [ "$file" = "$1" ]; then
+						local patch_file=$1
+						shift
+						while [ ! -z "$1" ]; do
+							case $1 in
+								r) 	d_echo "Enabling reverse patch for ${patch_file}"
+									minus_t="-t"
+									shift
+									;;
+								*)	if ! [[ "$1" =~ ^[0-9]+$ ]] ; then
+										show_message NOT_A_NUMBER "${patch_file}"
+										exit 1
+									else
+										p=$1
+									fi
+									shift
+								;;
+							esac
+						done
+					fi
+				done
+			fi
+			d_echo "Using patch file ${file}"
+			case ${file##*.} in
+				gz)
+					d_echo "Using gz"
+					zcat $startdir/patches/$file | patch -p${p} -f -i --verbose ${minus_t} || zcat $startdir/patches/$file | patch -p0 --verbose -f ${minus_t} || exit 1
+					;;
+				*)
+					d_echo "using common"
+					patch -p${p} -f -i $startdir/patches/$file --verbose ${minus_t} || patch -p0 -i $startdir/patches/$file --verbose -f ${minus_t} || exit 1
+					;;
+			esac
+	
+		done
+	fi
+}
+
+autobuild() {
+	d_echo "autobuild with ${BUILD_SYSTEM} build system"
+	case ${BUILD_SYSTEM} in
+		autotools)
+			MAKE_KEYS+=" -j${numjobs}"
+			MAKE_WORD=${MAKE_WORD:-make}
+			BUILD_WORD=${BUILD_WORD:-"LDFLAGS=\"$SLKLDFLAGS\" CFLAGS=\"$SLKCFLAGS\" CXXFLAGS=\"$SLKCFLAGS\" ./configure"}
+			INSTALL_WORD=${INSTALL_WORD:-"make install"}
+			INSTALL_KEYS=${INSTALL_KEYS:-"DESTDIR=$pkgdir"}
+			if [ "$enable_distcc" = "yes" ] ; then
+				PATH="/usr/lib${LIBDIRSUFFIX}/distcc/bin:$PATH"
+				export PATH
+				export DISTCC_POTENTIAL_HOSTS
+				MAKE_KEYS=" -j${distcc_numjobs}"
+				d_echo "Running DISTCC mode with ${MAKE_KEYS}"
+			fi
+
+		;;
+		cmake)
+			mkdir -p build && cd build || exit 1
+			MAKE_KEYS+=" -j${numjobs}"
+			MAKE_WORD=${MAKE_WORD:-make}
+			BUILD_WORD=${BUILD_WORD:-"cmake -DCMAKE_C_FLAGS:STRING=\"$SLKCFLAGS\" -DCMAKE_CXX_FLAGS:STRING=\"$SLKCFLAGS\""}
+			BUILD_WORD_SUFFIX=${BUILD_WORD_SUFFIX:-".."}
+			INSTALL_WORD=${INSTALL_WORD:-"make install"}
+			INSTALL_KEYS=${INSTALL_KEYS:-"DESTDIR=$pkgdir"}
+			if [ "$enable_distcc" = "yes" ] ; then
+				PATH="/usr/lib${LIBDIRSUFFIX}/distcc/bin:$PATH"
+				export PATH
+				export DISTCC_POTENTIAL_HOSTS
+				MAKE_KEYS=" -j${distcc_numjobs}"
+				d_echo "Running DISTCC mode with ${MAKE_KEYS}"
+			fi
+
+		;;
+		perl)
+			MAKE_KEYS=
+			BUILD_WORD=${BUILD_WORD:-perl}
+			INSTALL_WORD=${INSTALL_WORD:-"make install"}
+			INSTALL_KEYS+="DESTDIR=$pkgdir"
+		;;
+		python)
+			BUILD_WORD=${BUILD_WORD:-}
+			MAKE_WORD=${MAKE_WORD:-}
+			MAKE_KEYS=
+			INSTALL_WORD="python setup.py install"
+			INSTALL_KEYS+="--root=$pkgdir"
+		;;
+		qmake)
+			MAKE_KEYS+=" -j${numjobs}"
+			MAKE_WORD=${MAKE_WORD:-make}
+			BUILD_WORD=${BUILD_WORD:-"LDFLAGS=\"$SLKLDFLAGS\" CFLAGS=\"$SLKCFLAGS\" CXXFLAGS=\"$SLKCFLAGS\" qmake"}
+			INSTALL_WORD=${INSTALL_WORD:-"make install"}
+			INSTALL_KEYS+="INSTALL_ROOT=$pkgdir"
+			if [ "$enable_distcc" = "yes" ] ; then
+				PATH="/usr/lib${LIBDIRSUFFIX}/distcc/bin:$PATH"
+				export PATH
+				export DISTCC_POTENTIAL_HOSTS
+				MAKE_KEYS=" -j${distcc_numjobs}"
+				d_echo "Running DISTCC mode with ${MAKE_KEYS}"
+			fi
+		;;
+		waf)
+			BUILD_WORD=${BUILD_WORD:-"./waf configure"}
+			MAKE_WORD=${MAKE_WORD:-"./waf build"}
+			INSTALL_WORD=${INSTALL_WORD:-"./waf install"}
+			INSTALL_KEYS+=" --destdir=${pkgdir}"
+		;;
+		scons)
+			BUILD_WORD=${BUILD_WORD:-"scons"}
+#			BUILD_KEYS="DESTDIR=\"${pkgdir}\" ${BUILD_KEYS}"
+			INSTALL_WORD=${INSTALL_WORD:-"scons install"}
+#			INSTALL_KEYS+="DESTDIR=\"${pkgdir}\""
+			;;
+		*)
+		echo "hmmm... wrong build system!"
+		exit 1
+		;;
+	esac
+	eval "${BUILD_WORD} ${BUILD_KEYS} ${BUILD_WORD_SUFFIX}" || exit 1
+	eval "${MAKE_WORD} ${MAKE_KEYS}" || exit 1
+	eval "${INSTALL_WORD} ${INSTALL_KEYS}" || exit 1
+}
+
+parent_package() {
+#	local checked_pkgname="$1"
+	if [ "${p_pkgname}" == "${pkgname}" ]; then 
+		echo 1
+	fi
+}
+
+strip_binaries() {
+	set +e
+	if [ "${NO_STRIP}" != "1" ]; then 
+		d_echo "strip_binaries start"
+		cd ${pkgdir}
+		find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | \
+		xargs strip --strip-unneeded 2> /dev/null
+		find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | \
+		xargs strip --strip-unneeded 2> /dev/null
+		find . | xargs file | grep "current ar archive" | cut -f 1 -d : | xargs strip -g 2> /dev/null   
+		d_echo "strip_binaries end"
+	fi
+	set -e
+}
+
+set_build_options() {
+	CHOST=$ARCH
+	case ${ARCH} in
+		i386)
+			SLKCFLAGS=${SLKCFLAGS:--O2 -march=i386 -mtune=i686}
+			;;
+		i486)
+			SLKCFLAGS=${SLKCFLAGS:--O2 -march=i486 -mtune=i686}
+			;;
+		i686)
+			SLKCFLAGS=${SLKCFLAGS:--O2 -march=i686 -mtune=i686 -fomit-frame-pointer -fPIC}
+			;;
+		s390)
+			SLKCFLAGS=${SLKCFLAGS:--O2}
+			;;
+		x86_64)
+			SLKCFLAGS=${SLKCFLAGS:--O2 -fPIC}
+			;;
+	esac
+}
+
+set_post_permissions() {
+	d_echo "Setting post_permissions in ${pkgdir}"
+	set +e
+	find ${pkgdir} -type f -perm /o+w -exec chmod o-w {} \;
+	find ${pkgdir} -type d -perm /o+w -exec chmod o-w {} \;
+	for DIRS in usr/share usr/doc usr/share/doc; do
+		if [ -d "${pkgdir}/$DIRS" ]; then
+			if [ "$DIRS" == "usr/doc" -o "${DIRS}" == "usr/share/doc" ]; then
+				find ${pkgdir}/$DIRS -type f -exec chmod 644 {} \;
+				find ${pkgdir}/$DIRS -type d -exec chmod 755 {} \;
+			fi
+		fi
+		[ -d ${pkgdir}/$DIRS ] && chown root:root -R ${pkgdir}/$DIRS
+	done
+	[ -d ${pkgdir}/usr/bin ] && find ${pkgdir}/usr/bin -user root -group bin -exec chown root:root {} \;
+	[ -d ${pkgdir}/tmp ] && chmod -R o+t,a+rwx ${pkgdir}/tmp
+	set -e 
+}
+
+
+gzip_man_and_info_pages() {
+	d_echo "gzip_man_and_info_pages()"
+	for DOCS in man info; do
+		if [ -d "${pkgdir}/usr/share/$DOCS" ]; then
+			mv ${pkgdir}/usr/share/$DOCS ${pkgdir}/usr/$DOCS
+			if [[ ! "$(ls ${pkgdir}/usr/share)" ]]; then
+				rm -rf ${pkgdir}/usr/share 2>/dev/null
+			fi
+		fi
+		if [ -d "${pkgdir}/usr/$DOCS" ]; then
+		# I've never seen symlinks in info pages....
+			if [ "$DOCS" == "man" ]; then
+				(cd ${pkgdir}/usr/$DOCS
+				for manpagedir in $(find . -type d -name "man*" 2> /dev/null) ; do
+					( cd $manpagedir
+					for eachpage in $( find . -type l -maxdepth 1 2> /dev/null) ; do
+						ln -s $( readlink $eachpage ).gz $eachpage.gz
+						rm $eachpage
+					done )
+				done)
+			fi
+		find ${pkgdir}/usr/$DOCS -type f -exec gzip -9 '{}' \;
+		fi
+	done
+	local pkginfodir="$pkgdir/usr/info"
+	if [ -d "$pkginfodir" ] ; then
+		local infolist
+		rm $pkginfodir/dir.gz
+		infolist=$(ls -1 "$pkginfodir")
+		if [ ! -z "$infolist" ] ; then
+			echo "" >> $pkgdir/install/doinst.sh
+			echo "#Install info file(s)" >> $pkgdir/install/doinst.sh
+			echo "" >> $pkgdir/install/preremove.sh
+			echo "#Remove info file(s)" >> $pkgdir/install/preremove.sh
+			for infofile in $infolist ; do
+				echo "install-info usr/info/$infofile usr/info/dir" >> $pkgdir/install/doinst.sh
+				echo "install-info --delete usr/info/$infofile usr/info/dir" >> $pkgdir/install/preremove.sh
+			done
+		fi
+	fi
+	if [ -d "$pkgdir/usr/doc/${pkgname}-${pkgver}" ]; then 
+		if [ -z "$(ls $pkgdir/usr/doc/${pkgname}-${pkgver})" ]; then
+			rm -rf $pkgdir/usr/doc/${pkgname}-${pkgver} 2>/dev/null
+		fi
+	fi
+	if [ -d "$pkgdir/usr/doc" ]; then 
+		if [ -z "$(ls $pkgdir/usr/doc)" ]; then
+			rm -rf $pkgdir/usr/doc 2>/dev/null
+		fi
+	fi
+}
+
+copy_doinst() {
+	d_echo "copy_doinst"
+#	if [ -e $startdir/slack-desc ]; then
+#		cp -a $startdir/slack-desc $pkgdir/install/slack-desc
+#	fi
+
+	if [ -e $startdir/preremove.sh ]; then
+		cp -a $startdir/preremove.sh $pkgdir/install/preremove.sh
+	fi
+
+	if [ -e $startdir/postremove.sh ]; then
+		cp $startdir/postremove.sh > $pkgdir/install/postremove.sh
+	fi
+
+	case `file -b $startdir/doinst.sh*` in
+		ASCII*| *"shell script text executable")
+			install -m755 $startdir/doinst.sh $pkgdir/install/doinst.sh
+			;;
+		gzip*)
+			zcat $startdir/doinst.sh.gz > $pkgdir/install/doinst.sh
+			chmod 755 $pkgdir/install/doinst.sh
+			;;
+	esac
+}
+
+copy_doc() {
+	d_echo "copy_doc begin"
+	local real_src_dir="$1"
+	if [ -n "${real_src_dir}" ]; then
+		d_echo "	using ${real_src_dir} as src dir"
+		real_src_dir+="/"
+	fi
+
+	go_src_dir
+	docs+=("AUTHORS BUGS BUILD COMPILERS COPYING* NEWS README* \
+	TODO ChangeLog* Changelog* CHANGELOG* LICENSE* License* HACKING")
+	local docdir=
+	
+	if [ -d "${pkgdir}/usr/doc" -a "$(ls -1 ${pkgdir}/usr/doc 2>/dev/null)" ]; then
+		docdir=${pkgdir}/usr/doc/$(ls -1 ${pkgdir}/usr/doc)
+	else
+		docdir=${pkgdir}/usr/doc/${pkgname}-${pkgver}
+	fi
+	mkdir -p $docdir
+	for docfile in ${docs[@]}; do
+		if [ -d "${docfile}" ]; then
+			cp -a ${real_src_dir}${docfile} $docdir 2>/dev/null
+		else    
+			install -m644 ${real_src_dir}${docfile} ${docdir}/`basename ${docfile}` 2>/dev/null
+		fi
+	done
+}
+
+install_desktop_and_pixmap() {
+	d_echo "install_desktop_and_pixmap()"
+	if [ -d "${filedir}" ]; then 
+		cd ${filedir}
+		if [ "$(ls *.desktop 2>/dev/null)" ];then 
+			mkdir -p ${pkgdir}/usr/share/applications/
+			cp -a *.desktop ${pkgdir}/usr/share/applications/
+		fi
+		local pic_list=$(ls -1 *.png *.xpm *.svg 2>/dev/null)
+		if [ -n "${pic_list}" ]; then 
+			mkdir -p ${pkgdir}/usr/share/pixmaps/
+			for file in ${pic_list}; do
+				cp -a ${file} ${pkgdir}/usr/share/pixmaps/
+			done
+		fi
+		cd -
+	fi
+}
+
+create_package() {
+	d_echo "create package in ${pkgdir}"
+	cd $pkgdir
+	local sdescfile=$(pwd)/sdescfile.${RANDOM}
+	local ldescfile=$(pwd)/ldescfile.${RANDOM}
+	echo "${shortdesc}">${sdescfile}
+	if [ -n "${longdesc}" ]; then 
+		echo "${longdesc}">${ldescfile}
+	else 
+		if [ -n "${p_longdesc}" ]; then 
+			echo "${p_longdesc}">${ldescfile}
+		fi
+	fi
+	if [ -e "${ldescfile}" ]; then 
+		META_OPTIONS+=" --longdesc=${ldescfile}"
+	fi
+	META_OPTIONS+=" --shortdesc=${sdescfile}"
+	mkdir -p ${pkgdir}/install || exit 1 
+	mpkg-setmeta ${pkgdir} $META_OPTIONS || exit 1 #1530
+	set +e
+	rm -r ${ldescfile} ${sdescfile}  2>/dev/null
+	set -e
+	if [ "${SKIP_GENDEPS}" != "1" ]; then 
+		if [ -n "${gendeps_blacklist}" ]; then
+			local black_file=${startdir}/deps_blacklist-${RANDOM}
+			for i in ${gendeps_blacklist};do
+				echo $i >>${black_file}
+			done
+			local black_opts=" -E ${black_file}"
+		fi
+		mpkg -G -P ${black_opts} gendeps2 ${pkgdir} || exit 1
+		if [ -n ${black_file} ]; then
+			rm -f ${black_file}
+		fi
+	fi
+	mpkg-setmeta ${pkgdir} $DELDEP
+	mpkg-setmeta ${pkgdir} $ADDDEP
+
+	# Configuration files import
+	if [ -n "${config_files}" ] ; then
+		local config_files_file=${startdir}/config_files-${RANDOM}
+		echo "$config_files" > $config_files_file
+		mpkg-setmeta ${pkgdir} -f ${config_files_file}
+		# Now, we need to move files
+		for c_file in `cat ${config_files_file} | grep -v '^ *$' | sed -e 's/\([^\\]\) .*/\1/'` ; do 
+			echo "moving ${c_file} to ${c_file}.new"
+			mv ${pkgdir}/${c_file} ${pkgdir}/${c_file}.new
+		done
+		rm ${config_files_file}
+		unset config_files
+	fi
+	make_build_tree 
+	#я сидел в двух футболках, когда писал этот код
+	local out_dir=
+	if [ "$USE_REMOTE" = "1" ]; then 
+		out_dir=$package_out_dir
+	else
+		out_dir=${startdir}
+	fi
+	local package=${pkgname}-${pkgver//-/_}-${ARCH}-${pkgbuild//-/_}
+	d_echo "create_package : ${out_dir}/${package}.txz"
+	/sbin/makepkg -l n -c n -p ${out_dir}/${package}.txz || exit 1
+	echo "${out_dir}/${package}.txz" >> ${install_list}
+	if [ "${SKIP_VALIDATE}" != 1 ]; then
+		mpkg-validate ${out_dir}/$package.txz || exit 1
+		val_size=`du ${out_dir}/$package.txz.validate --apparent-size -h | cut -f1`
+			if [ "$val_size" = "19" ]; then
+				rm -f ${out_dir}/$package.txz.validate
+			fi
+	fi
+	d_echo "done create package"
+}
+
+gen_meta_options(){
+	META_OPTIONS="--keep-symlinks --name=${pkgname} --version=${pkgver//-/_} --arch=${ARCH} --build=${pkgbuild//-/_} "
+
+	DELDEP=""
+	ADDDEP=""
+	for tag in ${tags// / } ;do
+		META_OPTIONS+="--add-tag=$tag "
+	done
+
+	if [ -e $startdir/CHANGELOG -a "$(parent_package) ${pkgname}" ]; then
+		META_OPTIONS+="--changelog=$startdir/CHANGELOG "
+	fi
+	if [ -n "${provides}" ]; then
+		META_OPTIONS+="--provides=${provides} "
+	fi
+	
+	if [ -n "${conflicts}" ]; then
+		META_OPTIONS+="--conflicts=${conflicts} "
+	fi
+
+	META_OPTIONS+="--maintainer-name=${mn} --maintainer-email=${me} "
+
+	if [ -n "$removedep" ]; then
+		for rd in ${removedep// / } ; do
+			DELDEP+="--remove-dep=$rd "
+		done
+	fi
+	DELDEP+=" --remove-dep=fakeroot "
+
+	if [ -n "${adddep}" ]; then
+		for dep in ${adddep// / } ;do
+			ADDDEP+="--add-dep=$dep "
+		done
+	fi
+}
+
+make_build_tree() {
+	d_echo "start make_build_tree for ${pkgname}"
+	#Creating Build Tree
+	if [ "$(parent_package ${pkgname})" ]; then 
+		cd ${startdir}
+		d_echo "making build tree with files in $(pwd)"
+		mkdir -p ${pkgdir}/usr/src/BuildTrees || exit 1
+		tarfiles="files patches CHANGELOG doinst.sh doinst.sh.gz postremove.sh preremove.sh"
+		mkdir -p ${startdir}/files
+		cp -a ${pkgdir}/install/data.xml $startdir/files/data.xml || exit 1
+		if [ "${APPEND_DEPS}" == 1 ]; then
+			local _pkgdeps=$(python ${MKPKG_DIR}/mkpkg_xml_parser.py ${pkgdir}/install/data.xml -d)
+			appenddeps "${_pkgdeps}"
+		fi
+		tar Jcf ${pkgdir}/usr/src/BuildTrees/${pkgname}-${pkgver//-/_}.build_tree.tar.xz --ignore-failed-read \
+		--owner=root --group=root ${tarfiles} ABUILD 2>/dev/null
+		cd -
+		d_echo "make_build_tree end"
+	else
+		mkdir -p ${pkgdir}/usr/src/BuildTrees
+		cp -a ${p_pkgdir}/usr/src/BuildTrees/*build_tree.tar.xz ${pkgdir}/usr/src/BuildTrees/${pkgname}-${pkgver//-/_}.build_tree.tar.xz
+	fi
+	d_echo "making_build_tree finished"
+}
+
+#append build_deps in abuild with package deps
+appenddeps() {
+	d_echo "appenddeps()"
+	local checked_deps="$1"
+	local _new_bd=
+	if [ -z "$build_deps" ]; then
+		build_deps="${checked_deps}"
+	else
+		for bd in ${checked_deps}; do
+			if [ -z "$(echo ${build_deps} | grep $bd)" ]; then
+				build_deps+=" $bd"
+			fi
+		done
+	fi
+	if [ "$(grep ^build_deps= ${startdir}/ABUILD)" ]; then 
+		change_builddeps "${build_deps}" "${startdir}/ABUILD"
+		if [ "${BT_BUILD}" != 1 -a -w "${REAL_CWD}" ]; then 
+			change_builddeps "${build_deps}" "${REAL_CWD}/ABUILD"
+		fi
+	else
+		add_builddeps "${build_deps}" "${startdir}/ABUILD"
+		if [ "${BT_BUILD}" != 1 -a -w "${REAL_CWD}" ]; then 
+			add_builddeps "${build_deps}" "${REAL_CWD}/ABUILD"
+		fi
+	fi
+}
+
+add_builddeps() {
+	local l_build_deps="$1"
+	local abuild_path="$2"
+sed -i "0,/^tags=.*/{/^tags=.*/abuild_deps=\"${l_build_deps}\"
+}" ${abuild_path} || exit 1
+}
+
+change_builddeps() {
+	local l_build_deps="$1"
+	local abuild_path="$2"
+	sed -i "0,/build_deps=.*/s/build_deps=.*/build_deps=\"${l_build_deps}\"/" ${abuild_path} || exit 1
+}
+
+build_sequence() {
+	local createpkg=$1
+	d_echo "build_sequence() with ${pkgname}"
+	set_custom_opts
+	strip_binaries
+	set_post_permissions
+	gen_meta_options
+	if [ "${createpkg}" == "yes" ]; then 
+		create_package
+	fi
+}
+
+process_subpackages() {
+	d_echo "process_subpackages(): ready to build:$1 "
+	local ready_to_create="$1"
+	for pkg in ${pkglist}; do
+		d_echo "processing ${pkg}"
+		unsetter
+		${pkg}
+
+	pkgdir=${startdir}/${pkgname}
+		if [ "${ready_to_create}" == "yes" -a "${PARENT_ONLY}" != "1" ]; then
+			${pkg}_arch
+			if [ -n "${child_opts}" ]; then
+				for copt in ${child_opts}; do
+					case ${copt} in
+						inherit_parent_adddeps)
+							adddep+=" ${p_adddep}"
+							;;
+					esac
+				done
+			fi
+			build_sequence ${ready_to_create}
+		else
+			mkdir -p ${pkgdir} || exit 1
+			if [ "$(grep ^${pkg}_prep\(\) ${startdir}/ABUILD)" ]; then
+				${pkg}_prep
+			fi
+		fi
+	done
+}
+
+unsetter() {
+	unset provides
+	unset child_opts
+	unset adddep
+	unset longdesc
+	SKIP_VALIDATE=${CLI_SKIP_VALIDATE}
+	SKIP_GENDEPS=${CLI_SKIP_GENDEPS}
+	NO_STRIP=${CLI_NO_STRIP}
+	NO_POSTPERM=${CLI_NO_POSTPERM}
+}
+
+set_custom_opts() {
+	if [ -n "${custom_opts}" ]; then
+		for opt in ${custom_opts}; do
+			case $opt in
+				skip_validate)
+					SKIP_VALIDATE=${CLI_SKIP_VALIDATE:-1}
+					;;
+				skip_gendeps)
+					SKIP_GENDEPS=${CLI_SKIP_GENDEPS:-1}
+					;;
+				no_strip)
+					NO_STRIP=${CLI_NO_STRIP:-1}
+					;;
+				no_postperm)
+					NO_POSTPERM=${CLI_NO_POSTPERM:-1}
+					;;
+				*)
+					show_message UNKNOWN_CUSTOM_OPT ${opt}
+					;;
+			esac
+		done
+	fi
+}
+##############################################################################
+# 
+##############################################################################
+. ${startdir}/ABUILD
+#set_custom_opts
+get_extract_source
+get_numjobs
+set_build_options
+
+if [ "${USE_CUSTOM}" == "1" -o "${build_exists}" == "1" ]; then
+	if [ "$(grep '^before_build\(\)' ${startdir}/ABUILD)" ]; then
+		before_build
+	fi
+	set -e
+	build
+	set +e
+
+else
+	go_src_dir
+	burn_patches
+	if [ "$(grep '^before_build\(\)' ${startdir}/ABUILD)" ]; then
+		before_build
+	fi
+	set -e
+	autobuild
+	set +e
+fi
+
+copy_doc
+
+if [ "$(grep '^after_build\(\)' ${startdir}/ABUILD)" ]; then
+	after_build
+fi
+
+copy_doinst
+gzip_man_and_info_pages
+install_desktop_and_pixmap
+
+#make_build_tree
+install_list=${startdir}/install_list.${pkgname}
+rm -f ${install_list} 2>/dev/null
+
+#now we must process all subpackages
+set -e
+process_subpackages 
+set +e
+#and now we are ready to make packages
+#reread main vars (crunchy!)
+unsetter
+. ${startdir}/ABUILD
+
+pkgdir=${startdir}/${pkgname}
+if [ ! ${strict_version} ]; then
+	if [ "${pkgver}" != "${modif_version}" -a -n "${modif_version}" ]; then 
+		d_echo "restoring main package version from ${pkgver} to ${modif_version}"
+		pkgver=${modif_version}
+		p_pkgver=${modif_version}
+	fi
+fi
+build_sequence "yes"
+set -e
+process_subpackages "yes"
+set +e
+

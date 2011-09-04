@@ -1,0 +1,3 @@
+BUILD_SYSTEM="scons"
+BUILD_KEYS="DESTDIR=\"${pkgdir}\" PREFIX=\"/usr\""
+INSTALL_KEYS+="DESTDIR=\"${pkgdir}\" PREFIX=\"/usr\""

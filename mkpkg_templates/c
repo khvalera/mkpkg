@@ -1,0 +1,5 @@
+build()
+{
+go_src_dir
+burn_patches
+}
