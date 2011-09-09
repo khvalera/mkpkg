@@ -1,2 +1,2 @@
 BUILD_SYSTEM="perl"
-BUILD_KEYS="Makefile.PL PREFIX=/usr"
+BUILD_KEYS="Makefile.PL PREFIX=/usr INSTALLDIRS=vendor"
