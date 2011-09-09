@@ -443,7 +443,7 @@ unpack_build_tree_from_pkg() {
 		show_message PKG_HASNT_BT '$victim'                
 		exit 1
 	fi
-	#check, if file is lical or have relative path
+	#check, if file is local or have relative path
 	local victim_dir=$(dirname $victim)
 	if [ "${victim_dir:0:1}" != "/" ]; then 
 		victim_dir="$(pwd)"
@@ -454,7 +454,7 @@ unpack_build_tree_from_pkg() {
 		dst_dir="${src_cache_dir}"
 	fi
 	show_message WRITING_TO "${dst_dir}"
-	local tmp_dir="${dst_dir}"_${RANDOM}
+	local tmp_dir="${dst_dir}/${dst_dir}_${RANDOM}"
 	mkdir -p "${tmp_dir}" || exit 1
 	cd "${tmp_dir}" || exit 1
 	tar --wildcards '*build_tree.tar.xz' -xf "${victim_dir}"/$(basename $victim)
