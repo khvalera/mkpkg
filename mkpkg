@@ -7,17 +7,20 @@
 # 
 
 # This is cool software, so it has version!
-MKPKG_VER=1.2.2.7_RC2
+MKPKG_VER=%MKPKG_VER%
 
-if [ -f /usr/share/mpkg/mkpkg/mkpkg_shared_functions ]; then 
-	. /usr/share/mpkg/mkpkg/mkpkg_shared_functions
+MKPKG_DIR="/usr/share/mpkg/mkpkg"
+export MKPKG_DIR
+
+if [ -f "${MKPKG_DIR}/mkpkg_shared_functions" ]; then 
+	. "${MKPKG_DIR}/mkpkg_shared_functions"
 else
 	echo "Error loading shared functions block"
 	exit 1
 fi
 
-if [ ! -f ${MKPKG_DIR}/taglist ]; then
-	echo "Tag list file not found  (${MKPKG_DIR}/taglist)"
+if [ ! -f "${MKPKG_DIR}/taglist" ]; then
+	echo "Tag list file not found  ('${MKPKG_DIR}/taglist')"
 	exit 1
 fi
 #enable debug in your config if you need it.
@@ -40,7 +43,7 @@ wdm_check() {
 			;;
 		cwd) 
 			USE_REMOTE=0
-			src_cache_dir=$(pwd)
+			src_cache_dir="$(pwd)"
 			;;
 		*)
 		       	show_message BAD_REMOTE_DIR ${work_dir_mode}
@@ -70,7 +73,7 @@ check_config() {
 		if [ -f ~/.config/mkpkg.conf ]; then 
 			. ~/.config/mkpkg.conf
 	        fi
-
+		echo "-${src_cache_dir}-"
 		bt_working_dir+=.$(whoami)
 		wdm_check
 
@@ -79,12 +82,12 @@ check_config() {
 			bad=1
 		else 
 			if [ ! -d "${src_cache_dir}" ]; then
-				mkdir -p ${src_cache_dir} || bad=1
+				mkdir -p "${src_cache_dir}" || bad=1
 			fi
 		fi
 
 		if [ ! -w "${src_cache_dir}" ]; then
-			show_message CACHE_DIR_NOT_WRITABLE ${src_cache_dir}
+			show_message CACHE_DIR_NOT_WRITABLE "${src_cache_dir}"
 			bad=1
 		fi
 
@@ -114,32 +117,32 @@ check_remote_dirs() {
 	d_echo "check_remote_dirs()"
 	local bad=0
 	if [ ! -d "${bt_working_dir}" ]; then
-		mkdir -p ${bt_working_dir} || bad=1
+		mkdir -p "${bt_working_dir}" || bad=1
 	fi
 
 	if [ "${bad}" == "1" ];then
-		show_message ERROR_MAKING_BT_DIR ${bt_working_dir}
+		show_message ERROR_MAKING_BT_DIR "${bt_working_dir}"
 	fi
 
 	if [ ! -w "${bt_working_dir}" ]; then
 		bad=1
-		show_message BT_DIR_NOT_WRITABLE ${bt_working_dir}
+		show_message BT_DIR_NOT_WRITABLE "${bt_working_dir}"
 	fi
 
 	if [ ! -d "${package_out_dir}" ]; then
-		mkdir -p ${package_out_dir} || bad=1
+		mkdir -p "${package_out_dir}" || bad=1
 	fi
 
 	if [ "${bad}" == "1" ]; then
-		show_message ERROR_MAKING_PACKAGE_DIR_DIR ${package_out_dir}
+		show_message ERROR_MAKING_PACKAGE_DIR_DIR "${package_out_dir}"
 	fi
 
 	if [ ! -w "${package_out_dir}" ]; then
 		bad=1
-		show_message PACKAGE_DIR_NOT_WRITABLE ${package_out_dir}
+		show_message PACKAGE_DIR_NOT_WRITABLE "${package_out_dir}"
 	fi
 	
-	if [ ! -w $(pwd) ]; then 
+	if [ ! -w "$(pwd)" ]; then 
 		PWD_NOT_WRITABLE=1
 	fi
 
@@ -152,12 +155,12 @@ check_remote_dirs() {
 set_options()
 {
 	d_echo "set_options()"
-	startdir=$(pwd)
-	REAL_CWD=$(pwd)
+	startdir="$(pwd)"
+	REAL_CWD="${startdir}"
 	if [ "${use_cache_dir}" == "yes" ]; then
-		srcache=${src_cache_dir}
+		srcache="${src_cache_dir}"
 	else
-		srcache=${startdir}
+		srcache="${startdir}"
 	fi
 
 while [ ! -z "$1" ]; do 
@@ -192,7 +195,7 @@ while [ ! -z "$1" ]; do
 			;;
 		-bt)
 			shift
-			check_build_tree $(bt_path $1)
+			check_build_tree "$(bt_path $1)"
 			BT_BUILD=1
 			USE_REMOTE=1
 			;;
@@ -205,7 +208,6 @@ while [ ! -z "$1" ]; do
 		-bv)
 			shift
 			BUMP_VERSION=$1
-			echo "bumper will be!"
 			;;
 		--bump-version=*)
 			local _version=/$(echo "$1" | sed 's/--bump-version=//')
@@ -214,8 +216,6 @@ while [ ! -z "$1" ]; do
 		-bb)
 			shift
 			BUMP_BUILD=$1
-			echo "bumper will be!"
-
 			;;
 		--bump-build=*)
 			local _build=$(echo "$1" | sed 's/--bump-build=//')
@@ -257,11 +257,11 @@ while [ ! -z "$1" ]; do
 			check_remote_dirs
 			;;
 		-ccd|--clean-cache-dir)
-			rm -rf ${src_cache_dir}/*
+			rm -rf "${src_cache_dir}"/*
 			exit 1
 			;;
 		-cpd|--clean-package-dir)
-			rm -rf ${package_out_dir}/*.*
+			rm -rf "${package_out_dir}"/*
 			exit 1
 			;;
 		-wdm)
@@ -288,12 +288,12 @@ while [ ! -z "$1" ]; do
 			;;
 		-c64*)
 			shift
-			fakeroot /sbin/mkpkg_32to64 ${REAL_CWD} __suff__ $*
+			fakeroot /sbin/mkpkg_32to64 "${REAL_CWD}" __suff__ $*
 			exit
 			;;
 		-64*)
 			shift
-			fakeroot /sbin/mkpkg_32to64 ${REAL_CWD} $*
+			fakeroot /sbin/mkpkg_32to64 "${REAL_CWD}" $*
 			exit
 			;;
 		-sv|--skip-validate)
@@ -323,34 +323,34 @@ copy_abuild() {
 	if [ "${PWD_NOT_WRITABLE}" != "1" ]; then 
 		local _me=$(echo ${me} | sed "s,@, at ,")
 		sed "${MKPKG_DIR}/ABUILD" -e "s,%%%MAINTAINER%%%,${mn}," \
-			-e "s,%%%EMAIL%%%,${_me}," >$startdir/ABUILD
+			-e "s,%%%EMAIL%%%,${_me}," >"$startdir/ABUILD"
 		case $1 in
 			cmake)
-				cat ${MKPKG_DIR}/mkpkg_templates/cmake >>$startdir/ABUILD
+				cat "${MKPKG_DIR}"/mkpkg_templates/cmake >> "$startdir/ABUILD"
 				;;
 			python)
-				cat ${MKPKG_DIR}/mkpkg_templates/python >>$startdir/ABUILD
+				cat "${MKPKG_DIR}"/mkpkg_templates/python >> "$startdir/ABUILD"
 				;;
 			perl)
-				cat ${MKPKG_DIR}/mkpkg_templates/perl >>$startdir/ABUILD
+				cat "${MKPKG_DIR}"/mkpkg_templates/perl >> "$startdir/ABUILD"
 				;;
 			c)
-				cat ${MKPKG_DIR}/mkpkg_templates/c >>$startdir/ABUILD 
+				cat "${MKPKG_DIR}"/mkpkg_templates/c >> "$startdir/ABUILD" 
 				;;
 			qmake)
-				cat ${MKPKG_DIR}/mkpkg_templates/qmake >>$startdir/ABUILD
+				cat "${MKPKG_DIR}"/mkpkg_templates/qmake >> "$startdir/ABUILD"
 				;;
 			waf)
-				cat ${MKPKG_DIR}/mkpkg_templates/waf >>$startdir/ABUILD
+				cat "${MKPKG_DIR}"/mkpkg_templates/waf >> "$startdir/ABUILD"
 				;;
 			scons)
-				cat ${MKPKG_DIR}/mkpkg_templates/scons >>$startdir/ABUILD
+				cat "${MKPKG_DIR}"/mkpkg_templates/scons >> "$startdir/ABUILD"
 				;;
 			*)
-				cat ${MKPKG_DIR}/mkpkg_templates/autotools >>$startdir/ABUILD
+				cat "${MKPKG_DIR}"/mkpkg_templates/autotools >> "$startdir/ABUILD"
 				;;
 		esac
-		cat ${MKPKG_DIR}/mkpkg_templates/footer >>$(pwd)/ABUILD
+		cat "${MKPKG_DIR}"/mkpkg_templates/footer >> "$startdir/ABUILD"
 	else
 		show_message PWD_NOT_WRITABLE
 	fi
@@ -365,21 +365,21 @@ bt_path(){
 	local _bt_check=$(echo ${abuild_path} | sed -e 's/^\/.*/root/g' | sed -r 's/^http?:\/\/.*/wget/g' | sed -r 's/^ftp?:\/\/.*/wget/g' | sed -r 's/^api:.*/api/g')
 	case ${_bt_check} in
 		root)
-			ret=${abuild_path}
+			ret="${abuild_path}"
 			;;
 		wget)
-			wget --no-check-certificate ${wgetopts} -P ${srcache} -O "${srcache}/$(basename ${abuild_path})" $1
-			ret=${srcache}/$(basename ${abuild_path})
+			wget --no-check-certificate ${wgetopts} -P "${srcache}" -O "${srcache}/$(basename ${abuild_path})" $1
+			ret="${srcache}"/$(basename ${abuild_path})
 			;;
 		api)
 			bt_pkg_name="$(echo ${abuild_path} | sed -e s,api:,,g -e s,/,-,g)"
 			local bt_url="$(echo ${abuild_path} | sed -e s,api:,http://api.agilialinux.ru/bt/,g)"
-			wget --no-check-certificate ${wgetopts} ${bt_url} -O /${srcache}/${bt_pkg_name}.build_tree.tar.xz
-			ret=${srcache}/${bt_pkg_name}.build_tree.tar.xz
+			wget --no-check-certificate ${wgetopts} "${bt_url}" -O /"${srcache}"/${bt_pkg_name}.build_tree.tar.xz
+			ret="${srcache}"/${bt_pkg_name}.build_tree.tar.xz
 			;;
 
 		*)
-			ret=$(pwd)/${abuild_path}
+			ret="$(pwd)"/${abuild_path}
 			;;
 	esac
 echo $ret
@@ -446,27 +446,27 @@ unpack_build_tree_from_pkg() {
 	#check, if file is lical or have relative path
 	local victim_dir=$(dirname $victim)
 	if [ "${victim_dir:0:1}" != "/" ]; then 
-		victim_dir=$(pwd)
+		victim_dir="$(pwd)"
 	fi
 	#choose destdir
-	local dst_dir=$(pwd)
+	local dst_dir="$(pwd)"
 	if [ "${PWD_NOT_WRITABLE}" == "1" ]; then
-		dst_dir=${src_cache_dir}
+		dst_dir="${src_cache_dir}"
 	fi
 	show_message WRITING_TO "${dst_dir}"
-	local tmp_dir=${dst_dir}_${RANDOM}
-	mkdir -p ${tmp_dir} || exit 1
-	cd ${tmp_dir} || exit 1
-	tar --wildcards '*build_tree.tar.xz' -xf ${victim_dir}/$(basename $victim)
-	mv usr/src/BuildTrees/*.tar.xz ${dst_dir}
+	local tmp_dir="${dst_dir}"_${RANDOM}
+	mkdir -p "${tmp_dir}" || exit 1
+	cd "${tmp_dir}" || exit 1
+	tar --wildcards '*build_tree.tar.xz' -xf "${victim_dir}"/$(basename $victim)
+	mv usr/src/BuildTrees/*.tar.xz "${dst_dir}"
 	cd --
-	rm -rf ${tmp_dir}
+	rm -rf "${tmp_dir}"
 }
 
 #prepare work dir
 prepare_work_dir() {
 	local prefix="$1"
-	mkpkg_lockfile=${prefix}/mkpkg_${tmp_pkg_name}.lock
+	mkpkg_lockfile="${prefix}/mkpkg_${tmp_pkg_name}.lock"
 	d_echo "prepare_work_dir() ${prefix}"
 	if [ "$(check_lock_file)" == "1" -a -n "$(ps aux | grep mkpkg | grep ${tmp_pkg_name})" ]; then
 		local user_answer
@@ -487,7 +487,7 @@ prepare_work_dir() {
 	
 
 	if [ "${RESUME}" != "1" ]; then 
-		rm -rf ${prefix}
+		rm -rf "${prefix}"
 	fi
 
 	mkdir -p "${prefix}" || exit 1
@@ -502,7 +502,7 @@ check_mopsbuild() {
 
 	if [ -f "${build_path}/MOPSBUILD" ]; then 
 #		show_message DEPRECATE_MOPSBUILD
-		mv ${build_path}/MOPSBUILD ${build_path}/ABUILD
+		mv "${build_path}"/MOPSBUILD "${build_path}"/ABUILD
 	fi
 }
 #prepare working stuff in work dir
@@ -512,39 +512,34 @@ prepare_abuild() {
 	local tmp_workdir=
 	if [ "${BT_BUILD}" == "1" ]; then
 		d_echo "prepare_abuild() with BT_BUILD=1"
-		local local_bt=$(basename ${BT_FILE})
-		tmp_pkg_name=$(echo ${local_bt} | sed -e s,\.build_tree.tar.xz,,)
-		tmp_workdir=${bt_working_dir}/${tmp_pkg_name}
+		local local_bt="$(basename ${BT_FILE})"
+		tmp_pkg_name="$(echo ${local_bt} | sed -e s,\.build_tree.tar.xz,,)"
+		tmp_workdir="${bt_working_dir}/${tmp_pkg_name}"
 		prepare_work_dir "${tmp_workdir}"
-		cd ${tmp_workdir} || exit 1
-		tar xf ${BT_FILE}
+		cd "${tmp_workdir}" || exit 1
+		tar xf "${BT_FILE}"
 		check_mopsbuild "${tmp_workdir}"
-		startdir=${tmp_workdir}
-		show_message WORK_DIR $startdir
+		startdir="${tmp_workdir}"
+		show_message WORK_DIR "$startdir"
 		bumper "${startdir}"
 		check_deprecated_vars "${startdir}"
 	else
-		tmp_pkg_name=$(get_pkg_name)
-
+		tmp_pkg_name="$(get_pkg_name)"
 		if [ "${tmp_pkg_name}" == "_ERROR_" -o -z "${tmp_pkg_name}" ]; then 
 			show_message NO_ABUILD
 			exit 1
 		fi
-#		if [ -z "${tmp_pkg_name}" ]; then
-#			show_message NO_ABUILD
-#			exit 1
-#		fi
 
 		if [ "${USE_REMOTE}" == "1" ]; then
 			d_echo "prepare_abuild() with USE_REMOTE=1"
-			tmp_workdir=${bt_working_dir}/${tmp_pkg_name}
+			tmp_workdir="${bt_working_dir}/${tmp_pkg_name}"
 			prepare_work_dir "${tmp_workdir}"
-			startdir=${tmp_workdir}
-			show_message WORK_DIR $startdir
+			startdir="${tmp_workdir}"
+			show_message WORK_DIR "$startdir"
 			bumper "${REAL_CWD}"
 			check_deprecated_vars "${REAL_CWD}"
 			for i in ABUILD CHANGELOG files slack-desc patches doinst.sh.gz doinst.sh postremove.sh preremove.sh; do
-				cp -a $(pwd)/$i ${startdir} 2>/dev/null
+				cp -a "$(pwd)"/$i "${startdir}" 2>/dev/null
 			done
 
 		#	bumper "${startdir}"
@@ -556,7 +551,7 @@ prepare_abuild() {
 }
 
 create_lock_file() {
-	touch ${mkpkg_lockfile}
+	touch "${mkpkg_lockfile}"
 }
 
 check_lock_file() {
@@ -568,31 +563,31 @@ check_lock_file() {
 }
 
 remove_lock_file() {
-	rm -f ${mkpkg_lockfile}
+	rm -f "${mkpkg_lockfile}"
 }
 
 #bump version or build
 bumper() {
 	local abuild_path="$1"
 	if [ -n "${INCREASE_BUILD}" ]; then
-		local _curr_pkg_build=$(cat /${abuild_path}/ABUILD | grep -m 1 '^pkgbuild' | cut -d '=' -f 2-)
+		local _curr_pkg_build="$(cat /${abuild_path}/ABUILD | grep -m 1 '^pkgbuild' | cut -d '=' -f 2-)"
 		let "_curr_pkg_build+=1" 2>/dev/null || show_message CANT_INCREMENT_BUILD "${_curr_pkg_build}"
 		BUMP_BUILD=${_curr_pkg_build}
 	fi
 	d_echo "bumper(): bump version or build in ${abuild_path}/ABUILD [${BUMP_VERSION}:${BUMP_BUILD}]"
 	if [ -n "${BUMP_VERSION}" ]; then
-		sed -i "0,/^pkgver=.*/s/^pkgver=.*/pkgver=$BUMP_VERSION/" ${abuild_path}/ABUILD || exit 1
+		sed -i "0,/^pkgver=.*/s/^pkgver=.*/pkgver=$BUMP_VERSION/" "${abuild_path}"/ABUILD || exit 1
 	fi
 
 	if [ -n "${BUMP_BUILD}" ]; then
-		sed -i "0,/^pkgbuild=.*/s/^pkgbuild=.*/pkgbuild=$BUMP_BUILD/" ${abuild_path}/ABUILD || exit 1
+		sed -i "0,/^pkgbuild=.*/s/^pkgbuild=.*/pkgbuild=$BUMP_BUILD/" "${abuild_path}"/ABUILD || exit 1
 	fi
 }
 #check if abuild exists and get basic package attrs
 get_pkg_name() {
 	check_mopsbuild "$(pwd)"
-	if [ -f $(pwd)/ABUILD ]; then
-		local pkgname="$(cat /$(pwd)/ABUILD | grep -m 1 '^pkgname' | cut -d '=' -f 2-)"
+	if [ -f "$(pwd)/ABUILD" ]; then
+		local pkgname="$(cat /"$(pwd)"/ABUILD | grep -m 1 '^pkgname' | cut -d '=' -f 2-)"
 		echo "${pkgname}"
 	else
 		echo "_ERROR_"
@@ -603,23 +598,23 @@ get_pkg_name() {
 check_deprecated_vars() {
 	local abuild_path="$1"
 	d_echo "check_deprecated_vars() in ${abuild_path}/ABUILD"
-	if [ -n "$(cat ${abuild_path}/ABUILD | grep '^author')" ]; then
+	if [ -n "$(cat "${abuild_path}/ABUILD" | grep '^author')" ]; then
 		show_message DEPRECATED_VAR author
-		sed -i "s/^author=/#author=/g" ${abuild_path}/ABUILD
+		sed -i "s/^author=/#author=/g" "${abuild_path}"/ABUILD
 	fi
 
-	if [ -n "$(cat ${abuild_path}/ABUILD | grep '^email')" ]; then
+	if [ -n "$(cat "${abuild_path}/ABUILD" | grep '^email')" ]; then
 		show_message DEPRECATED_VAR email
-		sed -i "s/^email=/#email=/g" ${abuild_path}/ABUILD
+		sed -i "s/^email=/#email=/g" "${abuild_path}"/ABUILD
 	fi
 
 	#check for "$startdir/pkg" and its variants presence in ABUILD.
-	if [ -n "$(cat ${abuild_path}/ABUILD | grep '$startdir/pkg')" -o -n "$(cat ${abuild_path}/ABUILD | grep '${startdir}/pkg')" ]; then
+	if [ -n "$(cat "${abuild_path}"/ABUILD | grep '$startdir/pkg')" -o -n "$(cat "${abuild_path}"/ABUILD | grep '${startdir}/pkg')" ]; then
 		show_message ERR_STARTDIR_PKG
 		exit 1
 	fi
 	#same shit with $startdir/src
-	if [  "$(cat ${abuild_path}/ABUILD | grep '$startdir/src')" -o "$(cat ${abuild_path}/ABUILD | grep '${startdir}/src')" ]; then
+	if [  "$(cat "${abuild_path}"/ABUILD | grep '$startdir/src')" -o "$(cat "${abuild_path}"/ABUILD | grep '${startdir}/src')" ]; then
 		show_message ERR_STARTDIR_SRC
 		exit 1
 	fi
@@ -637,7 +632,7 @@ check_deprecated_vars() {
 
 #check abuild for commom errors
 check_abuild() {
-	. ${startdir}/ABUILD
+	. "${startdir}"/ABUILD
 #check main vars are present
 	local main_vars="pkgname pkgver pkgbuild arch tags"
 	if [ "$(check_var_set main_vars)" == "1" ]; then 
@@ -648,13 +643,13 @@ check_abuild() {
 
 #check for description presence
 	local desc_vars="shortdesc longdesc"
-	if [ "$(check_var_set desc_vars)" == "1" -a ! -e ${startdir}/slack-desc ]; then
+	if [ "$(check_var_set desc_vars)" == "1" -a ! -e "${startdir}/slack-desc" ]; then
 		show_message NO_DESC
 		exit 1
 	fi
 
 #does build() exist?
-	if [ ! "$(grep ^build\(\) ${startdir}/ABUILD)" ]; then 
+	if [ ! "$(grep ^build\(\) "${startdir}"/ABUILD)" ]; then 
 		local build_vars="BUILD_SYSTEM BUILD_KEYS"
 		if [ "$(check_var_set ${build_vars})" == "1" ]; then
 			show_message NO_BUILD_FUNC
@@ -721,17 +716,6 @@ check_abuild() {
 
 }
 
-#check ver and build var not contains "-"
-#check_tire() {
-#	for bv in ${pkgbuild} ; do
-#		tire=`echo "${bv}" | sed -n "/-/p"`
-#		if [ -n "${tire}" ]; then
-#			show_message BAD_DASH ${bv}
-#			exit 1
-#		fi
-#	done
-#}
-
 #check set of vars for existance
 check_var_set() {
 	local vars_to_check=$1
@@ -769,9 +753,9 @@ check_arch() {
 	fi
 
 	if [ -n "${checked_pkg}" ]; then
-		echo "${checked_pkg}_arch() {">>$startdir/${tmp_pkg_name}.AgiliaBuild
-		echo "	ARCH=${ARCH}">>$startdir/${tmp_pkg_name}.AgiliaBuild
-		echo "}">>$startdir/${tmp_pkg_name}.AgiliaBuild
+		echo "${checked_pkg}_arch() {">>"$startdir/${tmp_pkg_name}.AgiliaBuild"
+		echo "	ARCH=${ARCH}">>"$startdir/${tmp_pkg_name}.AgiliaBuild"
+		echo "}">>"$startdir/${tmp_pkg_name}.AgiliaBuild"
 	fi
 
 	if [ "${real_arch}" == "x86_64" ]; then
@@ -796,16 +780,16 @@ arch_type() {
 
 
 check_desc() {
-	local desc_dir=${startdir}/${pkgname}/install
+	local desc_dir="${startdir}/${pkgname}/install"
 	d_echo "check_desc() for ${startdir}/${pkgname}/install"
-	mkdir -p ${desc_dir} || exit 1
+	mkdir -p "${desc_dir}" || exit 1
 	if [ -z "${shortdesc}" ]; then 
 		show_message NO_DESC
 	       	exit 1
 	else
-		local shd=$(python ${MKPKG_DIR}/mkpkg_nonlatin.py "${shortdesc}")
+		local shd=$(python "${MKPKG_DIR}"/mkpkg_nonlatin.py "${shortdesc}")
 		if [ -n "${longdesc}" ]; then
-			local lgd=$(python ${MKPKG_DIR}/mkpkg_nonlatin.py "${longdesc}")
+			local lgd=$(python "${MKPKG_DIR}"/mkpkg_nonlatin.py "${longdesc}")
 		fi
 	
 		if [ -n "${shd}" ]; then
@@ -843,7 +827,7 @@ check_tags() {
 	local tag_num=0
 	for tag in $tags; do
 		d_echo "	check $tag"
-		if [ ! "$(grep -w ^$tag$ ${MKPKG_DIR}/taglist)" ]; then
+		if [ ! "$(grep -w ^$tag$ "${MKPKG_DIR}"/taglist)" ]; then
 			show_message UNKNOWN_TAG $tag
 			bad=1
 		fi
@@ -892,7 +876,6 @@ check_provides() {
 
 check_sequence() {
 	local checked_pkg=$1
-#	check_tire
 	check_arch ${arch} ${checked_pkg}
 	check_desc
 	check_tags "${tags}"
@@ -902,7 +885,7 @@ check_sequence() {
 del_work_dir() {
 	if [ -n "${bt_working_dir}" -a ${USE_REMOTE} == "1" -a "${NOT_CLEAR_SOURCE}" != "1" ]; then
 		d_echo "deleting ${startdir}"
-		rm -rf ${startdir}
+		rm -rf "${startdir}"
 	fi
 	remove_lock_file
 }
@@ -911,7 +894,7 @@ check_config
 get_maintainer
 set_options $*
 prepare_abuild
-cat <<"AGB_HEADER" >${startdir}/${tmp_pkg_name}.AgiliaBuild
+cat <<"AGB_HEADER" >"${startdir}/${tmp_pkg_name}.AgiliaBuild"
 #!/bin/bash
 ######################################################################################
 ###################### Start AgiliaBuild #############################################
@@ -932,43 +915,43 @@ cat <<"AGB_HEADER" >${startdir}/${tmp_pkg_name}.AgiliaBuild
  
 ############################ Set Vars Начальные переменные ###########################
 AGB_HEADER
-echo "startdir=${startdir}" >>$startdir/${tmp_pkg_name}.AgiliaBuild
-echo "srcdir=$startdir/${tmp_pkg_name}.src">>$startdir/${tmp_pkg_name}.AgiliaBuild
-echo "srcache=${srcache}" >>$startdir/${tmp_pkg_name}.AgiliaBuild
-echo "filedir=$startdir/files">>$startdir/${tmp_pkg_name}.AgiliaBuild
-echo "patchdir=$startdir/patches">>$startdir/${tmp_pkg_name}.AgiliaBuild
-echo "package_out_dir=${package_out_dir}" >>$startdir/${tmp_pkg_name}.AgiliaBuild
-echo "work_dir_mode=${work_dir_mode}" >>$startdir/${tmp_pkg_name}.AgiliaBuild
-echo "BT_BUILD=${BT_BUILD}" >>$startdir/${tmp_pkg_name}.AgiliaBuild
-echo "USE_REMOTE=${USE_REMOTE}" >>$startdir/${tmp_pkg_name}.AgiliaBuild
-echo "src_cache_dir=${src_cache_dir}">>$startdir/${tmp_pkg_name}.AgiliaBuild
-echo "use_cache_dir=${use_cache_dir}">>$startdir/${tmp_pkg_name}.AgiliaBuild
-echo "REAL_CWD=${REAL_CWD}">>$startdir/${tmp_pkg_name}.AgiliaBuild
-echo "NOT_CLEAR_SOURCE=${NOT_CLEAR_SOURCE}" >>$startdir/${tmp_pkg_name}.AgiliaBuild
-echo "CLI_NO_STRIP=${NO_STRIP}" >>$startdir/${tmp_pkg_name}.AgiliaBuild
-echo "APPEND_DEPS=${APPEND_DEPS}" >>$startdir/${tmp_pkg_name}.AgiliaBuild
-echo "CLI_NO_POSTPERM=${NO_POSTPERM}" >>$startdir/${tmp_pkg_name}.AgiliaBuild
-echo "CLI_SKIP_VALIDATE=${skip_validate}" >>$startdir/${tmp_pkg_name}.AgiliaBuild
-echo "CLI_SKIP_GENDEPS=${SKIP_GENDEPS}" >>$startdir/${tmp_pkg_name}.AgiliaBuild
-echo "MKPKG_DEBUG=${MKPKG_DEBUG}" >> $startdir/${tmp_pkg_name}.AgiliaBuild
-echo "DISTCC_POTENTIAL_HOSTS=\"${DISTCC_POTENTIAL_HOSTS}\"" >> $startdir/${tmp_pkg_name}.AgiliaBuild
-echo "enable_distcc=${enable_distcc}" >> $startdir/${tmp_pkg_name}.AgiliaBuild
-echo "distcc_numjobs=${distcc_numjobs}" >> $startdir/${tmp_pkg_name}.AgiliaBuild
-echo "DISTCC_HOSTS=\"${DISTCC_HOSTS}\"" >> $startdir/${tmp_pkg_name}.AgiliaBuild
-echo "BUILD_FARM_ARCH=${BUILD_FARM_ARCH}" >> $startdir/${tmp_pkg_name}.AgiliaBuild
-echo "mn=${mn}" >> $startdir/${tmp_pkg_name}.AgiliaBuild
-echo "me=${me}" >> $startdir/${tmp_pkg_name}.AgiliaBuild
-echo "PARENT_ONLY=${PARENT_ONLY}" >> $startdir/${tmp_pkg_name}.AgiliaBuild
-echo "numjobs=${numjobs}" >> $startdir/${tmp_pkg_name}.AgiliaBuild
+echo "startdir=\"${startdir}\"" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "srcdir=\"$startdir/${tmp_pkg_name}.src\"" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "srcache=\"${srcache}\"" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "filedir=\"$startdir/files\"" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "patchdir=\"$startdir/patches\"" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "package_out_dir=\"${package_out_dir}\"" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "work_dir_mode=\"${work_dir_mode}\"" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "BT_BUILD=${BT_BUILD}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "USE_REMOTE=${USE_REMOTE}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "src_cache_dir=\"${src_cache_dir}\"">> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "use_cache_dir=\"${use_cache_dir}\"">> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "REAL_CWD=\"${REAL_CWD}\"">> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "NOT_CLEAR_SOURCE=\"${NOT_CLEAR_SOURCE}\"" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "CLI_NO_STRIP=${NO_STRIP}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "APPEND_DEPS=${APPEND_DEPS}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "CLI_NO_POSTPERM=${NO_POSTPERM}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "CLI_SKIP_VALIDATE=${skip_validate}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "CLI_SKIP_GENDEPS=${SKIP_GENDEPS}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "MKPKG_DEBUG=${MKPKG_DEBUG}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "DISTCC_POTENTIAL_HOSTS=\"${DISTCC_POTENTIAL_HOSTS}\"" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "enable_distcc=${enable_distcc}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "distcc_numjobs=${distcc_numjobs}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "DISTCC_HOSTS=\"${DISTCC_HOSTS}\"" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "BUILD_FARM_ARCH=${BUILD_FARM_ARCH}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "mn=${mn}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "me=${me}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "PARENT_ONLY=${PARENT_ONLY}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "numjobs=${numjobs}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
 
 
 #so.... let_s check that yours abuild
 check_abuild
 check_arch ${arch}
-echo "build_exists=${build_exists}" >> $startdir/${tmp_pkg_name}.AgiliaBuild
-echo "USE_CUSTOM=${USE_CUSTOM}" >> $startdir/${tmp_pkg_name}.AgiliaBuild
-echo "ARCH=${ARCH}" >> $startdir/${tmp_pkg_name}.AgiliaBuild
-echo "LIBDIRSUFFIX=${LIBDIRSUFFIX}" >> $startdir/${tmp_pkg_name}.AgiliaBuild
+echo "build_exists=${build_exists}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "USE_CUSTOM=${USE_CUSTOM}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "ARCH=${ARCH}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "LIBDIRSUFFIX=${LIBDIRSUFFIX}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
 
 #check_deprecated_vars ${startdir}
 r_pkgname=${pkgname}
@@ -979,20 +962,20 @@ for pkg in ${pkglist}; do
 	d_echo "checking data for package ${pkgname}..."
 	check_sequence ${pkg}
 done
-echo "" >>$startdir/${tmp_pkg_name}.AgiliaBuild
-cat ${startdir}/ABUILD >> $startdir/${tmp_pkg_name}.AgiliaBuild
-echo "" >>$startdir/${tmp_pkg_name}.AgiliaBuild
-cat <<"AGB_FUNCS">>${startdir}/${tmp_pkg_name}.AgiliaBuild
+echo "" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+cat "${startdir}/ABUILD" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+echo "" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
+cat <<"AGB_FUNCS" >> "${startdir}/${tmp_pkg_name}.AgiliaBuild"
 . /usr/share/mpkg/mkpkg/mkpkg_shared_functions
 . /usr/share/mpkg/mkpkg/mkpkg_build_functions
 AGB_FUNCS
 
 
-. ${startdir}/ABUILD
+. "${startdir}/ABUILD"
 check_sequence
 
-chmod 755 ${startdir}/${tmp_pkg_name}.AgiliaBuild
-fakeroot ${startdir}/${tmp_pkg_name}.AgiliaBuild
+chmod 755 "${startdir}/${tmp_pkg_name}.AgiliaBuild"
+fakeroot "${startdir}/${tmp_pkg_name}.AgiliaBuild"
 build_status=$?
 if [ "${build_status}" != "0" ]; then 
 	show_message BUILD_ERROR
@@ -1001,7 +984,7 @@ if [ "${build_status}" != "0" ]; then
 fi
 
 if [ "${INSTALL}" == "1" ]; then
-	for ipkg in $(cat ${startdir}/install_list.${pkgname}); do
+	for ipkg in $(cat "${startdir}"/install_list.${pkgname}); do
 		ipkglist+="${ipkg} "
 	done
 	mpkg -y install ${ipkglist}

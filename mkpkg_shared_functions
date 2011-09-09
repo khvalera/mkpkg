@@ -4,12 +4,10 @@ d_echo() {
 	fi
 }
 
-MKPKG_DIR=/usr/share/mpkg/mkpkg
-
 #Loading message file
-if [ -f ${MKPKG_DIR}/mkpkg.messages ]; then 
-	. ${MKPKG_DIR}/mkpkg.messages
+if [ -f "${MKPKG_DIR}/mkpkg.messages" ]; then 
+	. "${MKPKG_DIR}/mkpkg.messages"
 else
-	echo "Error loading mkpkg.messages file from ${MKPKG_DIR} !"
+	echo "Error loading mkpkg.messages file from '${MKPKG_DIR}' !"
 	exit 1
 fi
