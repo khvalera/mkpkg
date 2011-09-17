@@ -821,7 +821,7 @@ fi
 copy_doc
 
 if [ "$(grep '^after_build\(\)' "${startdir}/ABUILD")" ]; then
-	after_buildv
+	after_build
 fi
 
 copy_doinst
