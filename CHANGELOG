@@ -1,0 +1,61 @@
+1.2.2.7.1
+FIXED: Typo caused after_build function not functional
+-
+1.2.2.7
+FIXED: bugs #1540,#1573,#1565
+-
+1.2.2.7_RC2
+FIXED: Fixed regression with set -e while processing strip_binaries, create_package and set_permission
+-
+1.2.2.7_RC1
+FIXED: subpackage naming error, if main package was built from any CVS. bug #1546
+CHANGED: improve error handling. Now set -e is always on during build () and foo() and foo_prep()
+-
+1.2.2.6
+FIXED: regression in non latin character searching. bug #1532
+-
+1.2.2.5
+FIXED: perl modules building. bug #1530
+FIXED: typo in russian translation. bug #1518
+ADDED: show position of incorrect letter in description. bug #1520
+-
+1.2.2.4
+FIXED: better "-" symbol processing in making build tree.
+FIXED: typo in mkpkg -c python code
+-
+1.2.2.3
+FIXED: allow longdesc absense. bug #1487
+-
+1.2.2.2
+ADDED: new internal vars: loc_source_files (list of all source files), loc_source_count (number of all source files). 
+FIXED: regression in compat32 package generation
+-
+1.2.2.1
+CHANGED: no 'doc' and 'docs' dir automatically copied from source code
+ADDED: -ib : automatically increase build number by 1
+-
+1.2.2
+CHANGED: now possible to use version and build strings with "-" symbol. They will automatically converted to "_".
+CHANGED: all support mkpkg scripts moved to /usr/share/mpkg/mkpkg
+ADD: shortdesc and longdesc checking for non latin characters
+ADD: -ubt option now shows destination dir for output file.
+FIXED: patching error with autoprobing -p0 option. bug #1438
+FIXED: -ubt option now supports relative and absoulute path. bug #1442
+-
+1.2.1.10
+FIXED: skip_validate behavior regression fixed
+-
+1.2.1.9
+ADD: Ability to use custom_opts in multipackage ABUILD in any additional package
+-
+1.2.1.8
+ADD: Ability to apply reversed patches ('r' option in patch_opts)
+FIXED: Remove unnecessary /usr/info in converted packages
+-
+1.2.1.7
+ADD: Add 'tex','accessibility' tags to taglist
+FIXED: Ignore patches that seem to be reversed or already applied
+-
+1.2.1.6
+FIXED: Impove bazaar revision obtaining
+-
