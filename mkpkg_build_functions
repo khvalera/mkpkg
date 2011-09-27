@@ -28,13 +28,15 @@ get_extract_source() {
 			item=$1
 			d_echo "   item ${item}"
 			local ifn=""
+			#FIXME коряво сделан разбор опций. Надо бы поправить.
 			if [ "$2" == "n" -o "$3" == "n" ]; then
 				#do not unpack
 				ifn=n
 			fi
+			cd "$scrache"
 
 			cd "$srcdir" || exit 1
-			local loc_source=$(basename "$item")
+			loc_source=$(basename "$item")
 
 			if [ "$2" == "o" -o "$3" == "o" ]; then
 				#overwrite anyway
@@ -64,27 +66,28 @@ get_extract_source() {
 					cd "${srcache}"
 					if [ ! ${ext_arg} ]; then
 						item=$(echo "$item" | sed 's/^svn:*//')
-						svn checkout $svn_opts $item ${pkgname}.src
-						cp -a -r "${srcache}/${pkgname}".src "${srcdir}"
+						svn checkout $svn_opts $item ${loc_source}.src
+						cp -a -r "${srcache}/${loc_source}".src "${srcdir}"
 					fi
 					if [ ! ${strict_version} ]; then
-						cd "${pkgname}".src || exit 1
+						cd "${loc_source}".src || exit 1
 						pkgver+=_svn`svn info | grep Revi | cut -d ":" -f2 | cut -c2-`
 						cd - || exit 1
 					fi
 					cd -
 					;;
 				git)
-					cd "${srcache}" || exit 1
+					cd "${srcache}"
+
 					if [ ! ${ext_arg} ];then 
 						item=$(echo "$item" | sed 's/^git:*//')
-						if [ ! -d "${pkgname}.src" ]; then
-							git clone $item ${pkgname}.src
+						if [ ! -d "${loc_source}.src" ]; then
+							git clone $item "${loc_source}.src"
 						else
-							cd "${pkgname}".src
+							cd "${loc_source}".src
 							git pull
 						fi
-						cp -a -r "${srcache}/${pkgname}".src "${srcdir}"
+						cp -a -r "${srcache}/${loc_source}".src "${srcdir}"
 					fi
 					if [ ! ${strict_version} ]; then
 						pkgver+=_git`date "+%Y%m%d"`
@@ -96,13 +99,13 @@ get_extract_source() {
 					if [ ! ${ext_arg} ];then
 						#cd ${srcache}
 						item=$(echo "$item" | sed 's/^hg:*//')
-						if [ ! -d ${pkgname}.src ]; then
-							hg clone $item ${pkgname}.src
+						if [ ! -d "${loc_source}.src" ]; then
+							hg clone $item "${loc_source}.src"
 						else
-							cd ${pkgname}.src
+							cd "${loc_source}.src"
 							hg pull && hg update  
 						fi
-						cp -a -r "${srcache}/${pkgname}".src "${srcdir}"
+						cp -a -r "${srcache}/${loc_source}".src "${srcdir}"
 					fi
 					if [ ! ${strict_version} ]; then
 						pkgver+=_hg`date "+%Y%m%d"`
@@ -114,22 +117,22 @@ get_extract_source() {
 					if [ ! ${ext_arg} ];then
 						cd "${srcache}"
 						item=$(echo "$item" | sed 's/^bzr:*//')
-						if [ ! -d ${pkgname}.src ]; then
-							bzr branch $item ${pkgname}.src
+						if [ ! -d "${loc_source}.src" ]; then
+							bzr branch $item "${loc_source}.src"
 						else
 							cd "${pkgname}.src"
 							bzr merge
 							if [ "$?" != "0" ]; then 
 								cd ..
 								d_echo "deleting corrupted bzr archive"
-								rm -rf "${pkgname}.src"
-								bzr branch $item ${pkgname}.src
+								rm -rf "${loc_source}.src"
+								bzr branch $item "${loc_source}.src"
 							fi
 						fi
-						cp -a -r "${srcache}/${pkgname}".src "${srcdir}"
+						cp -a -r "${srcache}/${loc_source}".src "${srcdir}"
 					fi
 					if [ ! ${strict_version} ]; then
-						cd "${srcache}/${pkgname}.src" || exit 1
+						cd "${srcache}/${loc_source}.src" || exit 1
 						local bzr_rev=mkpkg_${pkgname}
 						bzr log -r -1 lp:${pkgname} | grep revno: | cut -d " " -f2 > ${bzr_rev}
 						pkgver+=_bzr`cat ${bzr_rev}`
