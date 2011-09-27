@@ -74,7 +74,7 @@ get_extract_source() {
 						svn checkout $svn_opts $item ${loc_source}.src
 						cp -a -r "${srcache}/${loc_source}".src "${srcdir}"
 					fi
-					if [ ! ${strict_version} -a "${_first}" != "second" ]; then
+					if [ ! "${strict_version}" -a "${_first}" != "second" ]; then
 						cd "${loc_source}".src || exit 1
 						pkgver+=_svn`svn info | grep Revi | cut -d ":" -f2 | cut -c2-`
 						cd - || exit 1
@@ -94,7 +94,7 @@ get_extract_source() {
 						fi
 						cp -a -r "${srcache}/${loc_source}".src "${srcdir}"
 					fi
-					if [ ! ${strict_version} -a "${_first}" != "second" ]; then
+					if [ ! "${strict_version}" -a "${_first}" != "second" ]; then
 						pkgver+=_git`date "+%Y%m%d"`
 					fi
 					cd --
@@ -112,7 +112,7 @@ get_extract_source() {
 						fi
 						cp -a -r "${srcache}/${loc_source}".src "${srcdir}"
 					fi
-					if [ ! ${strict_version} -a "${_first}" != "second" ]; then
+					if [ ! "${strict_version}" -a "${_first}" != "second" ]; then
 						pkgver+=_hg`date "+%Y%m%d"`
 					fi
 					cd -
@@ -136,7 +136,7 @@ get_extract_source() {
 						fi
 						cp -a -r "${srcache}/${loc_source}".src "${srcdir}"
 					fi
-					if [ ! ${strict_version} -a "${_first}" != "second" ]; then
+					if [ ! "${strict_version}" -a "${_first}" != "second" ]; then
 						cd "${srcache}/${loc_source}.src" || exit 1
 						local bzr_rev=mkpkg_${pkgname}
 						bzr log -r -1 lp:${pkgname} | grep revno: | cut -d " " -f2 > ${bzr_rev}
