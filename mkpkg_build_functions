@@ -565,7 +565,7 @@ create_package() {
 	fi
 	META_OPTIONS+=" --shortdesc=\"${sdescfile}\""
 	mkdir -p "${pkgdir}/install" || exit 1 
-	mpkg-setmeta "${pkgdir}" "$META_OPTIONS" || exit 1 #1530
+	mpkg-setmeta "${pkgdir}" $META_OPTIONS || exit 1 #1530
 	set +e
 	rm -r "${ldescfile}" "${sdescfile}"  2>/dev/null
 	set -e
