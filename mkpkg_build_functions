@@ -374,7 +374,7 @@ strip_binaries() {
 	set +e
 	if [ "${NO_STRIP}" != "1" ]; then 
 		d_echo "strip_binaries start"
-		cd ${pkgdir}
+		cd "${pkgdir}"
 		find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | \
 		xargs strip --strip-unneeded 2> /dev/null
 		find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | \
@@ -550,9 +550,9 @@ install_desktop_and_pixmap() {
 create_package() {
 	d_echo "create package in ${pkgdir}"
 	cd "$pkgdir"
-	local sdescfile=$(pwd)/sdescfile.${RANDOM}
-	local ldescfile=$(pwd)/ldescfile.${RANDOM}
-	echo "${shortdesc}">${sdescfile}
+	local sdescfile="$(pwd)/sdescfile.${RANDOM}"
+	local ldescfile="$(pwd)/ldescfile.${RANDOM}"
+	echo "${shortdesc}"> "${sdescfile}"
 	if [ -n "${longdesc}" ]; then 
 		echo "${longdesc}">${ldescfile}
 	else 
@@ -629,7 +629,7 @@ gen_meta_options(){
 		META_OPTIONS+="--add-tag=$tag "
 	done
 
-	if [ -e $startdir/CHANGELOG -a "$(parent_package) ${pkgname}" ]; then
+	if [ -e "$startdir"/CHANGELOG -a "$(parent_package) ${pkgname}" ]; then
 		META_OPTIONS+="--changelog=$startdir/CHANGELOG "
 	fi
 	if [ -n "${provides}" ]; then
