@@ -220,7 +220,7 @@ go_src_dir() {
 		local dirs=$(ls -1 -F | grep / | sed 's/\///g' | sed q)
 		if [ -n "${dirs}" ]; then
 			cd "${dirs}"
-			if [ -n "${src_subdir}" -a -d $(pwd)/${src_subdir} ]; then
+			if [ -n "${src_subdir}" -a -d "$(pwd)"/${src_subdir} ]; then
 				cd "$(pwd)/${src_subdir}"
 			fi
 		fi
