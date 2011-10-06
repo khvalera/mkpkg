@@ -563,19 +563,19 @@ create_package() {
 	if [ -e "${ldescfile}" ]; then 
 		META_OPTIONS+=" --longdesc=${ldescfile}"
 	fi
-	META_OPTIONS+=" --shortdesc=${sdescfile}"
+	META_OPTIONS+=" --shortdesc=\"${sdescfile}\""
 	mkdir -p "${pkgdir}/install" || exit 1 
-	mpkg-setmeta ${pkgdir} $META_OPTIONS || exit 1 #1530
+	mpkg-setmeta "${pkgdir}" "$META_OPTIONS" || exit 1 #1530
 	set +e
-	rm -r ${ldescfile} ${sdescfile}  2>/dev/null
+	rm -r "${ldescfile}" "${sdescfile}"  2>/dev/null
 	set -e
 	if [ "${SKIP_GENDEPS}" != "1" ]; then 
 		if [ -n "${gendeps_blacklist}" ]; then
-			local black_file=${startdir}/deps_blacklist-${RANDOM}
+			local black_file="${startdir}"/deps_blacklist-${RANDOM}
 			for i in ${gendeps_blacklist};do
-				echo $i >>${black_file}
+				echo $i >> "${black_file}"
 			done
-			local black_opts=" -E ${black_file}"
+			local black_opts=" -E \"${black_file}\""
 		fi
 		mpkg -G -P ${black_opts} gendeps2 "${pkgdir}" || exit 1
 		if [ -n "${black_file}" ]; then
@@ -588,8 +588,8 @@ create_package() {
 	# Configuration files import
 	if [ -n "${config_files}" ] ; then
 		local config_files_file="${startdir}/config_files-${RANDOM}"
-		echo "$config_files" > $config_files_file
-		mpkg-setmeta "${pkgdir}" -f ${config_files_file}
+		echo "$config_files" > "$config_files_file"
+		mpkg-setmeta "${pkgdir}" -f "${config_files_file}"
 		# Now, we need to move files
 		for c_file in `cat ${config_files_file} | grep -v '^ *$' | sed -e 's/\([^\\]\) .*/\1/'` ; do 
 			echo "moving ${c_file} to ${c_file}.new"
