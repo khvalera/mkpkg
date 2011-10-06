@@ -609,7 +609,7 @@ create_package() {
 	local package="${pkgname}-${pkgver//-/_}-${ARCH}-${pkgbuild//-/_}"
 	d_echo "create_package : ${out_dir}/${package}.txz"
 	/sbin/makepkg -l n -c n -p "${out_dir}/${package}.txz" || exit 1
-	echo "${out_dir}/${package}.txz" >> ${install_list}
+	echo "${out_dir}/${package}.txz" >> "${install_list}"
 	if [ "${SKIP_VALIDATE}" != 1 ]; then
 		mpkg-validate "${out_dir}/$package.txz" || exit 1
 		val_size=`du ${out_dir}/$package.txz.validate --apparent-size -h | cut -f1`
