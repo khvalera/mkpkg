@@ -1,6 +1,5 @@
 #!/bin/bash
-echo "-${startdir}-"
-. ${startdir}/ABUILD
+. "${startdir}"/ABUILD
 
 r_startdir="${startdir}"
 r_pkgname=${pkgname} #will deprecate
