@@ -570,7 +570,7 @@ remove_lock_file() {
 bumper() {
 	local abuild_path="$1"
 	if [ -n "${INCREASE_BUILD}" ]; then
-		local _curr_pkg_build="$(cat /${abuild_path}/ABUILD | grep -m 1 '^pkgbuild' | cut -d '=' -f 2-)"
+		local _curr_pkg_build="$(cat "/${abuild_path}/ABUILD" | grep -m 1 '^pkgbuild' | cut -d '=' -f 2-)"
 		let "_curr_pkg_build+=1" 2>/dev/null || show_message CANT_INCREMENT_BUILD "${_curr_pkg_build}"
 		BUMP_BUILD=${_curr_pkg_build}
 	fi
