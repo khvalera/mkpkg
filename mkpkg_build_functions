@@ -563,7 +563,8 @@ create_package() {
 	if [ -e "${ldescfile}" ]; then 
 		META_OPTIONS+=" --longdesc=${ldescfile}"
 	fi
-	META_OPTIONS+=" --shortdesc='${sdescfile}'"
+	
+	META_OPTIONS+=" --shortdesc='${sdescfile// /\\ /}'"
 	mkdir -p "${pkgdir}/install" || exit 1 
 	mpkg-setmeta "${pkgdir}" $META_OPTIONS || exit 1 #1530
 	set +e
