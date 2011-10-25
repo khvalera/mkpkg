@@ -4,6 +4,7 @@ ADD/FIXED: Support for dir names with spaces
 ADD: Ability to switch off ccache with no_ccache option in ABUILD's custom_opts
 FIXED: add removing install scripts in compat32 packages. Fixed #1622
 FIXED: provides checking if only subpackage has provides, part of #1630
+FIXED: improve lock file using
 -
 1.2.2.7.1
 FIXED: Typo caused after_build function not functional

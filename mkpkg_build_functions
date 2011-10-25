@@ -76,9 +76,9 @@ get_extract_source() {
 					if [ ! "${strict_version}" -a "${_first}" != "second" ]; then
 						cd "${loc_source}".src || exit 1
 						pkgver+=_svn`svn info | grep Revi | cut -d ":" -f2 | cut -c2-`
-						cd - || exit 1
+						cd - >/dev/null || exit 1
 					fi
-					cd -
+					cd - >/dev/null
 					;;
 				git)
 					cd "${srcache}"
@@ -96,7 +96,7 @@ get_extract_source() {
 					if [ ! "${strict_version}" -a "${_first}" != "second" ]; then
 						pkgver+=_git`date "+%Y%m%d"`
 					fi
-					cd --
+					cd - >/dev/null
 					;;                           
 				hg)
 					cd "${srcache}"
@@ -114,7 +114,7 @@ get_extract_source() {
 					if [ ! "${strict_version}" -a "${_first}" != "second" ]; then
 						pkgver+=_hg`date "+%Y%m%d"`
 					fi
-					cd -
+					cd - >/dev/null
 					;;                           
 				bzr)
 					cd "${srcache}"
@@ -142,9 +142,9 @@ get_extract_source() {
 						pkgver+=_bzr`cat ${bzr_rev}`
 						rm -f ${bzr_rev}
 						echo "setting to ${pkgver}"
-						cd -
+						cd - >/dev/null
 					fi
-					cd -
+					cd - >/dev/null
 					;;
 
 				*)
@@ -543,7 +543,7 @@ install_desktop_and_pixmap() {
 				cp -a ${file} "${pkgdir}/usr/share/pixmaps/"
 			done
 		fi
-		cd -
+		cd - >/dev/null
 	fi
 }
 
@@ -673,7 +673,7 @@ make_build_tree() {
 		fi
 		tar Jcf "${pkgdir}/usr/src/BuildTrees/${pkgname}-${pkgver//-/_}.build_tree.tar.xz" --ignore-failed-read \
 		--owner=root --group=root ${tarfiles} ABUILD 2>/dev/null
-		cd -
+		cd - >/dev/null
 		d_echo "make_build_tree end"
 	else
 		mkdir -p "${pkgdir}/usr/src/BuildTrees"

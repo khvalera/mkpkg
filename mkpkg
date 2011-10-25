@@ -73,7 +73,6 @@ check_config() {
 		if [ -f ~/.config/mkpkg.conf ]; then 
 			. ~/.config/mkpkg.conf
 	        fi
-		echo "-${src_cache_dir}-"
 		bt_working_dir+=.$(whoami)
 		wdm_check
 
@@ -466,9 +465,10 @@ unpack_build_tree_from_pkg() {
 #prepare work dir
 prepare_work_dir() {
 	local prefix="$1"
-	mkpkg_lockfile="${prefix}/mkpkg_${tmp_pkg_name}.lock"
+	mkpkg_lockfile="/tmp/mkpkg_${tmp_pkg_name}.lock"
 	d_echo "prepare_work_dir() ${prefix}"
-	if [ "$(check_lock_file)" == "1" -a -n "$(ps aux | grep mkpkg | grep ${tmp_pkg_name})" ]; then
+
+	if [ "$(check_lock_file)" == "1" ]; then
 		local user_answer
 		local user_flag="0"
 		show_message ARE_YOU_SURE
@@ -551,14 +551,20 @@ prepare_abuild() {
 }
 
 create_lock_file() {
-	touch "${mkpkg_lockfile}"
+	echo $$ > "${mkpkg_lockfile}"
+	chmod go-rwx "${mkpkg_lockfile}"
 }
 
 check_lock_file() {
 	if [ -e "${mkpkg_lockfile}" ]; then
-		echo "1"
-	else
-		echo "0"
+		local lockpid=$(cat ${mkpkg_lockfile})
+
+		local mkpkg_running=$(ps -A | grep ${lockpid} | grep ${tmp_pkg_name})
+		if [ -n "${mkpkg_running}" ]; then 
+			echo "1"
+		else
+			echo "0"
+		fi
 	fi
 }
 
