@@ -1,5 +1,6 @@
 1.2.2.8
 ADD/FIXED: Support for multipile CVS sources
+ADD/FIXED: Support for dir names with spaces 
 -
 1.2.2.7.1
 FIXED: Typo caused after_build function not functional

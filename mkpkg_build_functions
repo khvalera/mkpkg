@@ -791,6 +791,10 @@ set_custom_opts() {
 				no_postperm)
 					NO_POSTPERM=${CLI_NO_POSTPERM:-1}
 					;;
+				no_ccache)
+					export CC="gcc"
+					export CXX="g++"
+					;;
 				*)
 					show_message UNKNOWN_CUSTOM_OPT ${opt}
 					;;
@@ -802,7 +806,7 @@ set_custom_opts() {
 # 
 ##############################################################################
 . "${startdir}/ABUILD"
-#set_custom_opts
+set_custom_opts
 get_extract_source
 get_numjobs
 set_build_options
