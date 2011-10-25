@@ -871,6 +871,7 @@ check_provides() {
 		show_message BAD_PROVIDE
 		exit 1
 	fi
+	unset provides
     fi
 }
 
