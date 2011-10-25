@@ -111,6 +111,7 @@ if [ "$SUFF" == 1 ]; then
     # Clean potentially conflicting stuff
     rm -rf usr/{share,doc,include,man,info}
     rm -rf {etc,var,home,tmp,srv,mnt,media}
+    rm -f install/*.sh 2>/dev/null
     # Move sources
     if [ -f usr/src/BuildTrees/$pkgname-$pkgver.build_tree.tar.xz ] ; then
 	mv usr/src/BuildTrees/$pkgname-$pkgver.build_tree.tar.xz usr/src/BuildTrees/${pkgname}32-$pkgver.build_tree.tar.xz

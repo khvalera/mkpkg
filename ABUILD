@@ -38,7 +38,7 @@ pkglist=
 docs=
 gendeps_blacklist=
 
-#custom_opts: skip_validate skip_gendeps no_postperm no_strip
+#custom_opts: skip_validate skip_gendeps no_postperm no_strip no_ccache
 custom_opts=""
 
 #----------------------------- Make PKG --------------------------------------

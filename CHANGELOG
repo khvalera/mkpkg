@@ -1,6 +1,8 @@
 1.2.2.8
 ADD/FIXED: Support for multipile CVS sources
 ADD/FIXED: Support for dir names with spaces 
+ADD: Ability to switch off ccache with no_ccache option in ABUILD's custom_opts
+FIXED: add removing install scripts in compat32 packages. Fixed #1622
 -
 1.2.2.7.1
 FIXED: Typo caused after_build function not functional
