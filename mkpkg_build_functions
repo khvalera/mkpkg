@@ -550,14 +550,14 @@ install_desktop_and_pixmap() {
 create_package() {
 	d_echo "create package in ${pkgdir}"
 	cd "$pkgdir"
-	local sdescfile="$(pwd)/sdescfile.${RANDOM}"
-	local ldescfile="$(pwd)/ldescfile.${RANDOM}"
+	local sdescfile="/tmp/sdescfile.${RANDOM}"
+	local ldescfile="/tmp/ldescfile.${RANDOM}"
 	echo "${shortdesc}"> "${sdescfile}"
 	if [ -n "${longdesc}" ]; then 
-		echo "${longdesc}">${ldescfile}
+		echo "${longdesc}"> "${ldescfile}"
 	else 
 		if [ -n "${p_longdesc}" ]; then 
-			echo "${p_longdesc}">${ldescfile}
+			echo "${p_longdesc}"> "${ldescfile}"
 		fi
 	fi
 	if [ -e "${ldescfile}" ]; then 
