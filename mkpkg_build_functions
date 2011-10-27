@@ -267,7 +267,7 @@ burn_patches() {
 			case ${file##*.} in
 				gz)
 					d_echo "Using gz"
-					zcat "$startdir/patches/$file" | patch -p${p} -f -i --verbose ${minus_t} || zcat "$startdir/patches/$file" | patch -p0 --verbose -f ${minus_t} || exit 1
+					zcat "$startdir/patches/$file" | patch -p${p} -f --verbose ${minus_t} || zcat "$startdir/patches/$file" | patch -p0 --verbose -f ${minus_t} || exit 1
 					;;
 				*)
 					d_echo "using common"
