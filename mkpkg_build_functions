@@ -59,7 +59,7 @@ get_extract_source() {
 			case $protocol in
 				http|ftp|https)
 					if [ ! "${ext_arg}" ]; then
-						wget -c --no-check-certificate "${wgetopts}" -O "${srcache}/${loc_source}".part $item  || exit 1
+						wget -c --no-check-certificate ${wgetopts} -O "${srcache}/${loc_source}".part $item  || exit 1
 						mv "${srcache}/${loc_source}".part "${srcache}/${loc_source}"
 						if [ ! "$ifn" = "n" ]; then
 							unpack "${srcache}/$loc_source"  || exit 1

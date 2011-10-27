@@ -6,6 +6,7 @@ FIXED: add removing install scripts in compat32 packages. Fixed #1622
 FIXED: provides checking if only subpackage has provides, part of #1630
 FIXED: improve lock file using
 FIXED: argument error in burn_patches function, #1637
+FIXED: warning message in source downloading if there is no wget_options
 -
 1.2.2.7.1
 FIXED: Typo caused after_build function not functional
