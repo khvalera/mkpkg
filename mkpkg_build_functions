@@ -120,7 +120,8 @@ get_extract_source() {
 					cd "${srcache}"
 					if [ ! ${ext_arg} ];then
 						cd "${srcache}"
-						item=$(echo "$item" | sed 's/^bzr:*//')
+						item=$(echo $item | sed 's/^bzr:*//')
+						loc_source=${pkgname}
 						if [ ! -d "${loc_source}.src" ]; then
 							bzr branch $item "${loc_source}.src"
 						else
