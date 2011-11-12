@@ -45,6 +45,7 @@ get_extract_source() {
 			if [ "$2" == "o" -o "$3" == "o" ]; then
 				#overwrite anyway
 				rm -rf "${srcache}/${loc_source}"
+				rm -rf "${srcache}/${loc_source}.part"
 			fi
 
 			loc_source_arr[${#loc_source_arr[@]}]="${loc_source}"
