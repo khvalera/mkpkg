@@ -1,0 +1,20 @@
+lang=`echo $LANG | cut -b 1,2`
+n_echo() {
+case $1 in
+#######
+MKPKG_START*)
+#######
+case $lang in
+ru) mmsg "Запускается mkpkg версия $2";;
+*) mmsg "Starting mkpkg version $2";;
+esac;;
+
+
+*) echo "Unknown string $1"; exit 1
+;;
+esac
+}
+
+mmsg() {
+echo -e "\e[0;32m ${1} \e[0m"
+}
