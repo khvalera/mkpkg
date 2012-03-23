@@ -11,3 +11,11 @@ else
 	echo "Error loading mkpkg.messages file from '${MKPKG_DIR}' !"
 	exit 1
 fi
+
+#Loading normal messages
+if [ -f "${MKPKG_DIR}/mkpkg.n_messages" ]; then
+      . "${MKPKG_DIR}/mkpkg.n_messages"
+else    
+         echo "Error loading mkpkg.n_messages file from '${MKPKG_DIR}' !"
+         exit 1
+fi     

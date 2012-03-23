@@ -463,8 +463,8 @@ gzip_man_and_info_pages() {
 			echo "" >> "$pkgdir/install/preremove.sh"
 			echo "#Remove info file(s)" >> "$pkgdir/install/preremove.sh"
 			for infofile in $infolist ; do
-				echo "install-info usr/info/$infofile usr/info/dir" >> "$pkgdir/install/doinst.sh"
-				echo "install-info --delete usr/info/$infofile usr/info/dir" >> "$pkgdir/install/preremove.sh"
+				echo "install-info --quiet usr/info/$infofile usr/info/dir" >> "$pkgdir/install/doinst.sh"
+				echo "install-info --delete --quiet usr/info/$infofile usr/info/dir" >> "$pkgdir/install/preremove.sh"
 			done
 		fi
 	fi

@@ -9,6 +9,8 @@
 # This is cool software, so it has version!
 MKPKG_VER=%MKPKG_VER%
 
+
+
 MKPKG_DIR="/usr/share/mpkg/mkpkg"
 export MKPKG_DIR
 
@@ -18,6 +20,7 @@ else
 	echo "Error loading shared functions block"
 	exit 1
 fi
+n_echo MKPKG_START ${MKPKG_VER}
 
 if [ ! -f "${MKPKG_DIR}/taglist" ]; then
 	echo "Tag list file not found  ('${MKPKG_DIR}/taglist')"
@@ -50,6 +53,7 @@ wdm_check() {
 			exit 1
 			;;
 	esac
+	d_echo "wdm_check() end"
 }
 
 
@@ -62,6 +66,7 @@ get_maintainer() {
 		show_message NO_INFO_IN_XML
 		exit 1
 	fi
+	d_echo "get_maintainer() end"
 }
 
 #check config file
