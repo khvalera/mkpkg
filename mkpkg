@@ -226,7 +226,6 @@ while [ ! -z "$1" ]; do
 			BUMP_BUILD=${_build}
 			;;
 		-ib)
-			shift
 			INCREASE_BUILD=1
 			;;
 		-si|--sudo-install)
