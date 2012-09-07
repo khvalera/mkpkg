@@ -406,6 +406,10 @@ set_build_options() {
 			SLKCFLAGS=${SLKCFLAGS:--O2 -fPIC}
 			;;
 	esac
+	export SLKCFLAGS
+	export CFLAGS="$SLKCFLAGS"
+	export SLKCXXFLAGS="$SLKCFLAGS"
+	export CXXFLAGS="$SLKCFLAGS"
 }
 
 set_post_permissions() {
