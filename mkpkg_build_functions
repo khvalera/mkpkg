@@ -427,7 +427,7 @@ set_post_permissions() {
 	if [ "${NO_POSTPERM}" != "1" ]; then
 		find "${pkgdir}" -type f -perm /o+w -exec chmod o-w {} \;
 		find "${pkgdir}" -type d -perm /o+w -exec chmod o-w {} \;
-		for DIRS in usr/share usr/doc usr/share/doc; do
+		for DIRS in usr/share usr/doc; do
 			if [ -d "${pkgdir}/$DIRS" ]; then
 				if [ "$DIRS" == "usr/doc" -o "${DIRS}" == "usr/share/doc" ]; then
 					find "${pkgdir}/$DIRS" -type f -exec chmod 644 {} \;
