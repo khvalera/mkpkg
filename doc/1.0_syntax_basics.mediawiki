@@ -7,11 +7,11 @@
 
 Для каждого пакета, файл должен находиться в отдельной директории, и иметь именно такое имя. Например, ваша директория с ABUILD'ами к разным пакетам должна иметь подобный вид:
 
-<code>
+<pre>
 pkg1/ABUILD
 pkg2/ABUILD
 ...
-</code>
+</pre>
 
 
 === Дополнительные файлы ===
@@ -36,7 +36,7 @@ pkg2/ABUILD
 
 Пример одного из самых простых ABUILD:
 
-<code>
+<pre>
 pkgname=alsa-lib
 pkgver=1.0.25
 pkgbuild=1
@@ -51,6 +51,6 @@ build_deps='python glibc-solibs'
 BUILD_SYSTEM='autotools'
 BUILD_KEYS="--prefix=/usr --libdir=/usr/lib$LIBDIRSUFFIX"
 INSTALL_KEYS="DESTDIR=$pkgdir"
-</code>
+</pre>
 
 В дальнейших главах мы разберем все по порядку.
