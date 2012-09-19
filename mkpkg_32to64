@@ -9,7 +9,7 @@ PKGLIST="$@"
 
 make_compat32() {
 	set -e
-	PKG_FULLPATH="$1"
+	PKG_FULLPATH="$(readlink -f $1)"
 	PKGNAME=$(basename "$PKG_FULLPATH")
 
 	# Create working directory
