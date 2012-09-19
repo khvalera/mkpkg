@@ -88,9 +88,9 @@ modify_deps() {
 	dest_dir="$1"
 	deps="$(python /usr/share/mpkg/mkpkg/mkpkg_xml_parser.py $dest_dir/install/data.xml -d)"
 	depstring="-Z "
-	for d in deps ; do
-		newdep_name="$(echo $d | sed 's/[><=!]*.*$//g')"
-		newdep_tail="$(echo $d | sed 's/^[a-zA-Z0-9\-\_]//g')"
+	for d in $deps ; do
+		newdep_name="$(echo $d | sed 's/[>=<!].*//g')"
+		newdep_tail="$(echo $d | sed 's/.*[>=<!]//g')"
 
 		depstring+="-d '${newdep_name}32${newdep_tail}' "
 	done
