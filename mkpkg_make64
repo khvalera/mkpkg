@@ -1,0 +1,86 @@
+#!/bin/bash
+#
+# This script creates x86_64-compatible package for 32-bit only apps, such as wine.
+
+# Load global configuration
+. /etc/mkpkg.conf
+
+PKGLIST="$@"
+
+make_pkg64() {
+	set -e
+	PKG_FULLPATH="$1"
+	PKGNAME=$(basename "$PKG_FULLPATH")
+
+	# Create working directory
+	wd=${bt_working_dir}.${USER}/32to64/$PKGNAME
+	orig_dir=${wd}/orig
+	rm -rf $wd
+	mkdir -p $orig_dir
+	( cd $orig_dir ; tar -xf "$PKG_FULLPATH" )
+
+	echo "Replacing tags"
+	replace_tags ${orig_dir}
+
+	echo "Modifying meta"
+	modify_meta ${orig_dir}
+
+	echo "Modifying deps"
+	modify_deps ${orig_dir}
+
+	echo "Packing back"
+	# Package it and move to packages directory
+	( cd ${orig_dir} ; buildpkg ; mv ./*.txz ${package_out_dir}/ )
+	set +e
+
+}
+
+modify_deps() {
+	dest_dir="$1"
+	deps="$(python /usr/share/mpkg/mkpkg/mkpkg_xml_parser.py $dest_dir/install/data.xml -d)"
+	depstring="-Z "
+	for d in deps ; do
+		newdep_name="$(echo $d | sed 's/[><=!]*.*$//g')"
+		newdep_tail="$(echo $d | sed 's/^[a-zA-Z0-9\-\_]//g')"
+
+		depstring+="-d '${newdep_name}32${newdep_tail}' "
+	done
+	mpkg-setmeta ${dest_dir} ${depstring}
+
+	return 0
+}
+
+modify_meta() {
+	dest_dir="$1"
+	mpkg-setmeta ${dest_dir} --arch=x86_64
+
+	return 0
+}
+
+replace_tags() {
+	dest_dir="$1"
+	echo "DEST: $dest_dir"
+	# Modify metadata
+	# Tags
+	pkgtags="$(python /usr/share/mpkg/mkpkg/mkpkg_xml_parser.py $dest_dir/install/data.xml -t)"
+	taglist=
+	found=0
+	tagstring="--cleartags "
+
+	for tag in $pkgtags; do
+		taglist+=" ${tag} "
+	done
+	taglist+=" x86 "
+
+	for tg in ${taglist}; do
+		tagstring+="--add-tag=$tg "
+	done
+	mpkg-setmeta ${dest_dir} ${tagstring}
+	return 0
+}
+
+# Run stuff
+for i in ${PKGLIST} ; do 
+	make_pkg64 $i
+done
+

@@ -1,170 +1,107 @@
 #!/bin/bash
-#
-# convert 32bit packages to 64 bit
-# by UH
-#
+# This script converts i686 package to x86_64 compat32 package by stripping unneeded files
 
+
+# Load global configuration
 . /etc/mkpkg.conf
-REAL_CWD=$1
-shift
-if [ "$1" == "__suff__" ]; then
-    shift
-    SUFF=1
-fi
-other_opts=$*
 
-set32env()
-{
-#this part is:
-# Copyright (C) 2007  Frederick Emmott <mail@fredemmott.co.uk>
-# Copyright 2009  Eric Hameleers, Eindhoven, NL
-# Based on the file with the same name which is part of
-# the Slamd64 Linux project (www.slamd64.com)
+PKGLIST="$@"
 
-# Distributed under the GNU General Public License, version 2, as
-# published by the Free Software Foundation.
+make_compat32() {
+	set -e
+	PKG_FULLPATH="$1"
+	PKGNAME=$(basename "$PKG_FULLPATH")
 
-export PATH="/usr/bin/32:/usr/lib/qt/bin:$PATH"
-export CC="gcc" # This is actually the /usr/bin/32/gcc wrapper
-export CXX="g++"
+	# Create working directory
+	wd=${bt_working_dir}.${USER}/32to64/$PKGNAME
+	orig_dir=${wd}/orig
+	dest_dir=${wd}/dest
+	rm -rf $wd
+	mkdir -p $orig_dir
+	mkdir -p $dest_dir
+	( cd $orig_dir ; tar -xf "$PKG_FULLPATH" )
 
-# Check for Qt4 and the old 'compatibility install' of Qt3:
-if [ -d /opt/kde3/lib/qt3 ]; then
-  export QTDIR=/opt/kde3/lib/qt3
-fi
-if [ -d /usr/lib/qt ]; then
-  export QT4DIR=/usr/lib/qt
-fi
+	# Copy metadata
+	mkdir ${dest_dir}/install
+	cp ${orig_dir}/install/data.xml ${dest_dir}/install/data.xml
 
-if [ ! "$LD_LIBRARY_PATH" = "" ]; then
-  export LD_LIBRARY_PATH="/usr/local/lib:/lib:/usr/lib:$LD_LIBRARY_PATH"
-else
-  export LD_LIBRARY_PATH="/usr/local/lib:/lib:/usr/lib"
-fi
+	# Copy libs
+	( cd ${orig_dir}
+		for i in $(find . -name '*.so') $(find . -name '*.so.*') ; do
+			echo "Moving lib $i"
+			install -Dm0755 $i ${dest_dir}/$i
+		done
+	)
 
-if [ ! "$PKG_CONFIG_PATH" = "" ]; then
-  export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:$PKG_CONFIG_PATH"
-else
-  export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:/usr/lib/pkgconfig"
-fi
-#end of this part
+	echo "Replacing tags"
+	replace_tags ${dest_dir}
 
+	echo "Modifying meta"
+	modify_meta ${dest_dir}
+
+	echo "Modifying deps"
+	modify_deps ${dest_dir}
+
+	echo "Packing back"
+	# Package it and move to packages directory
+	( cd ${dest_dir} ; buildpkg ; mv ./*.txz ${package_out_dir}/ )
+	set +e
 }
 
-#echo "real_cwd=${REAL_CWD}"
-#echo "other_opts=${other_opts}"
-#convert single package
-check_bin_dir()
-{
-bin_dirs="usr/bin bin usr/local/bin sbin usr/sbin usr/local/sbin"
-for bin_dir in ${bin_dirs}; do
-  if [ -d ${bin_dir} ]; then
-    mkdir -p ${bin_dir}/32
-    mv ${bin_dir}/* ${bin_dir}/32 2>/dev/null
-  fi
+replace_tags() {
+	dest_dir="$1"
+	# Modify metadata
+	# Tags
+	pkgtags="$(python /usr/share/mpkg/mkpkg/mkpkg_xml_parser.py $dest_dir/install/data.xml -t)"
+	taglist=
+	found=0
+	tagstring="--cleartags "
+
+	for tag in $pkgtags; do
+		result="$(echo $tag | grep '-' || true)"
+		if [ -z "${result}" -a "$found" == 0 ]; then
+			taglist+=" compat32 "
+			found=1
+		else
+			taglist+=" ${tag} "
+			taglist+=" x86 "
+		fi
+	done
+	for tg in ${taglist}; do
+		tagstring+="--add-tag=$tg "
+	done
+	mpkg-setmeta ${dest_dir} ${tagstring}
+	return 0
+}
+
+modify_meta() {
+	dest_dir="$1"
+	pkginfo="$(python /usr/share/mpkg/mkpkg/mkpkg_xml_parser.py $dest_dir/install/data.xml -p)"
+	pkgname=$(echo $pkginfo | sed 's/\s.*//g')
+
+	mpkg-setmeta ${dest_dir} --arch=x86_64 --name=${pkgname}32 
+
+	return 0
+}
+
+modify_deps() {
+	dest_dir="$1"
+	deps="$(python /usr/share/mpkg/mkpkg/mkpkg_xml_parser.py $dest_dir/install/data.xml -d)"
+	depstring="-Z "
+	for d in deps ; do
+		newdep_name="$(echo $d | sed 's/[><=!]*.*$//g')"
+		newdep_tail="$(echo $d | sed 's/^[a-zA-Z0-9\-\_]//g')"
+
+		depstring+="-d '${newdep_name}32${newdep_tail}' "
+	done
+	mpkg-setmeta ${dest_dir} ${depstring}
+
+	return 0
+}
+
+
+# Run stuff
+for i in ${PKGLIST} ; do 
+	make_compat32 $i
 done
-}
-replace_tags()
-{
-taglist=
-found=0
-tagstring="--cleartags "
-pkgtags=$(python /usr/share/mpkg/mkpkg/mkpkg_xml_parser.py $1/install/data.xml -t)
-for tag in $pkgtags; do
-    result=`echo "$tag" | grep "-"`
-    if [ -z "${result}" -a "$found" == 0 ]; then
-	taglist+=" compat32 "
-	found=1
-    else
-	taglist+=" ${tag} "
-	taglist+=" x86 "
-    fi
-done
-for tg in ${taglist}; do
-    tagstring+="--add-tag=$tg "
-done
-echo ${tagstring}
-mpkg-setmeta $1 ${tagstring}
-}
 
-convert_package()
-{
-#unpack that 32bit stuff
-
-wd=${bt_working_dir}.${USER}/32to64
-rm -rf $wd
-mkdir -p $wd
-cd $wd
-tar -xf $1
-
-pkginfo=$(python /usr/share/mpkg/mkpkg/mkpkg_xml_parser.py $wd/install/data.xml -p)
-set -- ${pkginfo}
-pkgname=$1
-pkgver=$2
-pkgarch=$3
-pkgbuild=$4
-
-if [ "$SUFF" == 1 ]; then 
-    check_bin_dir
-    replace_tags "$wd"
-    
-    # Clean potentially conflicting stuff
-    rm -rf usr/{share,doc,include,man,info}
-    rm -rf {etc,var,home,tmp,srv,mnt,media}
-    rm -f install/*.sh 2>/dev/null
-    # Move sources
-    if [ -f usr/src/BuildTrees/$pkgname-$pkgver.build_tree.tar.xz ] ; then
-	mv usr/src/BuildTrees/$pkgname-$pkgver.build_tree.tar.xz usr/src/BuildTrees/${pkgname}32-$pkgver.build_tree.tar.xz
-    fi
-    
-    if [ "`ls -1 $wd/usr/lib/*.so* 2>/dev/null`" != "" ] ; then
-	mkdir -p $wd/tmplib
-	cp -a $wd/usr/lib/*.so* $wd/tmplib
-	rm -rf $wd/usr/lib
-	mkdir -p $wd/usr/lib
-	mv $wd/tmplib/*.so* $wd/usr/lib
-	rm -rf $wd/tmplib
-    fi
-
-    if [ "`ls -1 $wd/lib/*.so* 2>/dev/null`" != "" ] ; then
-	mkdir -p $wd/tmplib
-	cp -a $wd/lib/*.so* $wd/tmplib
-	rm -rf $wd/lib
-	mkdir -p $wd/lib
-	mv $wd/tmplib/*.so* $wd/lib
-	rm -rf $wd/tmplib
-    fi
-
-
-    mpkg-setmeta $wd --shortdesc="$pkgname compat32 version"
-    pkgname=${pkgname}32
-    mpkg-setmeta $wd --name=${pkgname}
-fi
-
-mpkg-setmeta $wd --arch=x86_64 || exit 1
-
-mpkg-setmeta $wd -Z --add-dep="compat32" --add-tag="x86"
-cd $wd
-/sbin/makepkg -l n -c n -p ${package_out_dir}/${pkgname}-${pkgver}-x86_64-${pkgbuild}.txz
-
-rm -rf $wd
-}
-
-
-#check for items in command line options. recursively scan all dirs.
-check_items()
-{
-for item in $2;do
-    if [ -f $1/$item ]; then
-        if [ -n "$(file -biz $1/$item | grep application/x-tar)" ]; then
-	    convert_package "$1/$item"
-        fi
-    else if [ -d $1/${item} ]; then
-	file_list=$(ls -1 $1/${item})
-	check_items "$1/${item}" "${file_list}"
-	fi
-    fi
-done
-}
-set32env
-check_items "${REAL_CWD}" "${other_opts}"
