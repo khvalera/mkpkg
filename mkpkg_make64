@@ -41,7 +41,7 @@ modify_deps() {
 	depstring="-Z "
 	for d in $deps ; do
 		newdep_name="$(echo $d | sed 's/[>=<!].*//g')"
-		newdep_tail="$(echo $d | sed 's/.*[>=<!]//g')"
+		newdep_tail="$(echo $d | sed 's/^[^>=<!]*//g')"
 
 		depstring+="-d '${newdep_name}32${newdep_tail}' "
 	done
