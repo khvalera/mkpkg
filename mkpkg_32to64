@@ -44,7 +44,7 @@ make_compat32() {
 
 	echo "Packing back"
 	# Package it and move to packages directory
-	( cd ${dest_dir} ; buildpkg ; mv ./*.txz ${package_out_dir}/ )
+	( cd ${dest_dir} ; buildpkg ${package_out_dir}/ )
 	set +e
 }
 

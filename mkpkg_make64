@@ -30,7 +30,7 @@ make_pkg64() {
 
 	echo "Packing back"
 	# Package it and move to packages directory
-	( cd ${orig_dir} ; buildpkg ; mv ./*.txz ${package_out_dir}/ )
+	( cd ${orig_dir} ; buildpkg ${package_out_dir}/ )
 	set +e
 
 }
