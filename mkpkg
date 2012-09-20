@@ -299,12 +299,12 @@ while [ ! -z "$1" ]; do
 			;;
 		-c64*)
 			shift
-			fakeroot /sbin/mkpkg_32to64 $*
+			fakeroot mkpkg_32to64 $*
 			exit
 			;;
 		-64*)
 			shift
-			fakeroot /sbin/mkpkg_make64 $*
+			fakeroot mkpkg_make64 $*
 			exit
 			;;
 		-sv|--skip-validate)
