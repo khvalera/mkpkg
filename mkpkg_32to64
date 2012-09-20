@@ -29,7 +29,8 @@ make_compat32() {
 	( cd ${orig_dir}
 		for i in $(find . -name '*.so') $(find . -name '*.so.*') ; do
 			echo "Moving lib $i"
-			install -Dm0755 $i ${dest_dir}/$i
+			mkdir -p ${dest_dir}/$(dirname $i)
+			cp -a $i ${dest_dir}/$i
 		done
 	)
 
