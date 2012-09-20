@@ -3,15 +3,17 @@
 # Idea by FreeArcher, archer at programmist dot ru
 # Created by Unnamed_Hero , uh dot linux at gmail dot com
 # Special thanks to aix27249, NK, NomerUno, svitoos and other people!
+# New age development: aix27249, khvalera
 # Licenced under terms of GPLv3 or higher.
 # 
 
 # This is cool software, so it has version!
 MKPKG_VER=%MKPKG_VER%
 
+# FIXME: this string should be replaced during CMake build
+MKPKG_INSTALL_PREFIX=/usr
 
-
-MKPKG_DIR="/usr/share/mpkg/mkpkg"
+MKPKG_DIR=${MKPKG_INSTALL_PREFIX}"/share/mpkg/mkpkg"
 export MKPKG_DIR
 
 if [ -f "${MKPKG_DIR}/mkpkg_shared_functions" ]; then 
