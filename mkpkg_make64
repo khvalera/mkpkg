@@ -43,7 +43,7 @@ modify_deps() {
 		newdep_name="$(echo $d | sed 's/[>=<!].*//g')"
 		newdep_tail="$(echo $d | sed 's/^[^>=<!]*//g')"
 
-		depstring+="-d '${newdep_name}32${newdep_tail}' "
+		depstring+="-d ${newdep_name}32${newdep_tail} "
 	done
 	mpkg-setmeta ${dest_dir} ${depstring}
 
