@@ -33,6 +33,14 @@ make_compat32() {
 		done
 	)
 
+	# Copy ABUILD
+	pkginfo="$(python /usr/share/mpkg/mkpkg/mkpkg_xml_parser.py $dest_dir/install/data.xml -p)"
+	pkgname=$(echo $pkginfo | sed 's/\s.*//g')
+	orig_abuild=$(basename ${orig_dir}/usr/src/BuildTrees/${pkgname}-*.build_tree.tar.xz)
+	dest_abuild=$(echo ${orig_abuild} | sed s/${pkgname}/${pkgname}32/g)
+	install -Dm0644 ${orig_dir}/usr/src/BuildTrees/${orig_abuild} ${dest_dir}/usr/src/BuildTrees/${dest_abuild}
+
+	# Do data.xml magic
 	echo "Replacing tags"
 	replace_tags ${dest_dir}
 
