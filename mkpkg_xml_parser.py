@@ -98,6 +98,35 @@ def get_tags():
         print "Oh shi~... No data.xml or it is very ugly."
         sys.exit (2)
     
+def get_provides():
+    global doc
+    pkgprovides=""
+    try:
+        node=doc.firstChild
+        for p in node.childNodes:
+            for ptag in p.childNodes:
+                if ptag.parentNode.nodeName=="provides":
+                    pkgprovides=ptag.nodeValue.strip()
+        print pkgprovides
+    except:     
+        print "Oh shi~... No data.xml or it is very ugly."
+        sys.exit (2)
+
+def get_conflicts():
+    global doc
+    pkgconflicts=""
+    try:
+        node=doc.firstChild
+        for p in node.childNodes:
+            for ptag in p.childNodes:
+                if ptag.parentNode.nodeName=="conflicts":
+                    pkgconflicts=ptag.nodeValue.strip()
+        print pkgconflicts
+    except:     
+        print "Oh shi~... No data.xml or it is very ugly."
+        sys.exit (2)
+
+
 
 if sys.argv[2]=="-m":
     get_maintainer()
@@ -111,6 +140,13 @@ elif sys.argv[2]=="-p":
 elif sys.argv[2]=="-t":
     get_tags()
     sys.exit(0)
+elif sys.argv[2]=="-P":
+    get_provides()
+    sys.exit(0)
+elif sys.argv[2]=="-C":
+    get_conflicts()
+    sys.exit(0)
+
 else:
     print "Unknown arg."
     sys.exit(2)

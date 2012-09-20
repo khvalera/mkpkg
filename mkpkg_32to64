@@ -34,7 +34,7 @@ make_compat32() {
 	)
 
 	# Copy ABUILD
-	pkginfo="$(python /usr/share/mpkg/mkpkg/mkpkg_xml_parser.py $dest_dir/install/data.xml -p)"
+	pkginfo="$(mkpkg_xml_parser $dest_dir/install/data.xml -p)"
 	pkgname=$(echo $pkginfo | sed 's/\s.*//g')
 	orig_abuild=$(basename ${orig_dir}/usr/src/BuildTrees/${pkgname}-*.build_tree.tar.xz)
 	dest_abuild=$(echo ${orig_abuild} | sed s/${pkgname}/${pkgname}32/g)
@@ -50,6 +50,8 @@ make_compat32() {
 	echo "Modifying deps"
 	modify_deps ${dest_dir}
 
+	
+
 	echo "Packing back"
 	# Package it and move to packages directory
 	( cd ${dest_dir} ; buildpkg ${package_out_dir}/ )
@@ -60,7 +62,7 @@ replace_tags() {
 	dest_dir="$1"
 	# Modify metadata
 	# Tags
-	pkgtags="$(python /usr/share/mpkg/mkpkg/mkpkg_xml_parser.py $dest_dir/install/data.xml -t)"
+	pkgtags="$(mkpkg_xml_parser $dest_dir/install/data.xml -t)"
 	taglist=
 	found=0
 	tagstring="--cleartags "
@@ -84,17 +86,34 @@ replace_tags() {
 
 modify_meta() {
 	dest_dir="$1"
-	pkginfo="$(python /usr/share/mpkg/mkpkg/mkpkg_xml_parser.py $dest_dir/install/data.xml -p)"
+	pkginfo="$(mkpkg_xml_parser $dest_dir/install/data.xml -p)"
 	pkgname=$(echo $pkginfo | sed 's/\s.*//g')
 
+	# Set package name
 	mpkg-setmeta ${dest_dir} --arch=x86_64 --name=${pkgname}32 
+	
+	# Clear config files
+	mpkg-setmeta ${dest_dir} -F
+
+	# Check if provides value exists
+	provides="$(mkpkg_xml_parser $dest_dir/install/data.xml -P)"
+	if [ "$provides" != "" ] ; then
+		mpkg-setmeta ${dest_dir} --provides=${provides}32
+	fi
+
+	# Check if conflicts value exists
+	conflicts="$(mkpkg_xml_parser $dest_dir/install/data.xml -C)"
+	if [ "$conflicts" != "" ] ; then
+		mpkg-setmeta ${dest_dir} --conflicts=${conflicts}32
+	fi
+
 
 	return 0
 }
 
 modify_deps() {
 	dest_dir="$1"
-	deps="$(python /usr/share/mpkg/mkpkg/mkpkg_xml_parser.py $dest_dir/install/data.xml -d)"
+	deps="$(mkpkg_xml_parser $dest_dir/install/data.xml -d)"
 	depstring="-Z "
 	for d in $deps ; do
 		newdep_name="$(echo $d | sed 's/[>=<!].*//g')"
@@ -106,6 +125,7 @@ modify_deps() {
 
 	return 0
 }
+
 
 
 # Run stuff

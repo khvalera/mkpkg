@@ -37,7 +37,7 @@ make_pkg64() {
 
 modify_deps() {
 	dest_dir="$1"
-	deps="$(python /usr/share/mpkg/mkpkg/mkpkg_xml_parser.py $dest_dir/install/data.xml -d)"
+	deps="$(mkpkg_xml_parser $dest_dir/install/data.xml -d)"
 	depstring="-Z "
 	for d in $deps ; do
 		newdep_name="$(echo $d | sed 's/[>=<!].*//g')"
@@ -62,7 +62,7 @@ replace_tags() {
 	echo "DEST: $dest_dir"
 	# Modify metadata
 	# Tags
-	pkgtags="$(python /usr/share/mpkg/mkpkg/mkpkg_xml_parser.py $dest_dir/install/data.xml -t)"
+	pkgtags="$(mkpkg_xml_parser $dest_dir/install/data.xml -t)"
 	taglist=
 	found=0
 	tagstring="--cleartags "
