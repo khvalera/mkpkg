@@ -7,6 +7,22 @@
 
 PKGLIST="$@"
 
+check_dir_whitelist() {
+	local DIR=$(echo $1 | sed 's/^\.//g')
+	local WHITELIST="/lib /usr/lib /usr/local/lib"
+	local bad=1
+	for check in $WHITELIST ; do
+		local zzz=$(echo $DIR | sed s:^${check}::g)
+		if [ "$DIR" != "$zzz" ] ; then
+			bad=0
+		fi
+	done
+	if [ "$bad" = "1" ] ; then
+		echo "Skipping files from $DIR"
+	fi
+	return $bad
+}
+
 make_compat32() {
 	set -e
 	PKG_FULLPATH="$(readlink -f $1)"
@@ -28,6 +44,9 @@ make_compat32() {
 	# Copy libs
 	( cd ${orig_dir}
 		for i in $(find . -name '*.so') $(find . -name '*.so.*') ; do
+			dirname=$(dirname $i)
+			check_dir_whitelist $dirname || continue
+			
 			echo "Moving lib $i"
 			mkdir -p ${dest_dir}/$(dirname $i)
 			cp -a $i ${dest_dir}/$i
