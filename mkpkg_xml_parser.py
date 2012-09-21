@@ -35,6 +35,8 @@ def get_deps():
                             depstring+="<"
                         elif nv=="notequal":
                             depstring+="!="
+                        elif nv=="equal":
+                            depstring+="=="
                         elif nv=="atleast":
                             depstring+=">="
                         elif nv=="notmore":
