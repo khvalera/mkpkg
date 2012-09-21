@@ -42,6 +42,7 @@ make_compat32() {
 	cp ${orig_dir}/install/data.xml ${dest_dir}/install/data.xml
 
 	# Copy libs
+	local copied_once=0
 	( cd ${orig_dir}
 		for i in $(find . -name '*.so') $(find . -name '*.so.*') ; do
 			dirname=$(dirname $i)
@@ -50,8 +51,13 @@ make_compat32() {
 			echo "Moving lib $i"
 			mkdir -p ${dest_dir}/$(dirname $i)
 			cp -a $i ${dest_dir}/$i
+			copied_once=1
 		done
 	)
+	if [ "$copied_once" = "0" ] ; then
+		echo "ERROR: package has no libs, output will be empty. Aborting build"
+		exit 1
+	fi
 
 	# Copy ABUILD
 	pkginfo="$(mkpkg_xml_parser $dest_dir/install/data.xml -p)"
