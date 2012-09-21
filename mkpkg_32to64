@@ -9,7 +9,7 @@ PKGLIST="$@"
 
 check_dir_whitelist() {
 	local DIR=$(echo $1 | sed 's/^\.//g')
-	local WHITELIST="/lib /usr/lib /usr/local/lib"
+	local WHITELIST="/lib /usr/lib /usr/local/lib /usr/i486-slackware-linux/lib /usr/i686-slackware-linux/lib"
 	local bad=1
 	for check in $WHITELIST ; do
 		local zzz=$(echo $DIR | sed s:^${check}::g)
@@ -58,7 +58,7 @@ make_compat32() {
 	pkgname=$(echo $pkginfo | sed 's/\s.*//g')
 	orig_abuild=$(basename ${orig_dir}/usr/src/BuildTrees/${pkgname}-*.build_tree.tar.xz)
 	dest_abuild=$(echo ${orig_abuild} | sed s/${pkgname}/${pkgname}32/g)
-	install -Dm0644 ${orig_dir}/usr/src/BuildTrees/${orig_abuild} ${dest_dir}/usr/src/BuildTrees/${dest_abuild}
+	install -Dm0644 ${orig_dir}/usr/src/BuildTrees/${orig_abuild} ${dest_dir}/usr/src/BuildTrees/${dest_abuild} || echo "WARNING: No ABUILD in package"
 
 	# Do data.xml magic
 	echo "Replacing tags"
