@@ -466,7 +466,7 @@ gzip_man_and_info_pages() {
 				(cd "${pkgdir}/usr/$DOCS"
 				for manpagedir in $(find . -type d -name "man*" 2> /dev/null) ; do
 					( cd $manpagedir
-					for eachpage in $( find . -type l -maxdepth 1 2> /dev/null) ; do
+					for eachpage in $( find . -type l -maxdepth 1 | grep -v '\.gz$' 2> /dev/null) ; do
 						ln -s $( readlink $eachpage ).gz $eachpage.gz
 						rm $eachpage
 					done )
