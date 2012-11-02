@@ -232,6 +232,7 @@ go_src_dir() {
 
 burn_patches() {
 	d_echo "burn_patchces()"
+	echo ""
 	if [ -d "$startdir"/patches -a "${RESUME}" != "1" ]; then
 		local curr_dir=`pwd`
 		cd "$startdir/patches"
@@ -268,28 +269,58 @@ burn_patches() {
 				done
 			fi
 			echo "Using patch file ${file}"
+			local readfunc=cat
 			case ${file##*.} in
 				gz)
 					d_echo "Using gz"
-					zcat "$startdir/patches/$file" | patch -p${p} -f --verbose ${minus_t} || zcat "$startdir/patches/$file" | patch -p0 --verbose -f ${minus_t} || exit 1
+					readfunc=zcat
 					;;
 				z2)
 					d_echo "Using bz2"
-					bzcat "$startdir/patches/$file" | patch -p${p} -f --verbose ${minus_t} || bzcat "$startdir/patches/$file" | patch -p0 --verbose -f ${minus_t} || exit 1
+					readfunc=bzcat
 					;;
 				xz)
 					d_echo "Using xz"
-					xzcat "$startdir/patches/$file" | patch -p${p} -f --verbose ${minus_t} || xzcat "$startdir/patches/$file" | patch -p0 --verbose -f ${minus_t} || exit 1
+					readfunc=xzcat
 					;;
 
 				*)
 					d_echo "using common"
-					patch -p${p} -f -i "$startdir"/patches/$file --verbose ${minus_t} || patch -p0 -i "$startdir"/patches/$file --verbose -f ${minus_t} || exit 1
+					readfunc=cat
 					;;
 			esac
+
+			# Trying -p1
+			for p_level in 2 1 0 ; do
+				set +e
+				patchresult_text="$($readfunc "$startdir/patches/$file" | LC_ALL=C patch -p${p_level} -f --verbose ${minus_t} 2>&1)"
+				patchresult_ret=$?
+				err_type=$(echo "$patchresult_text" | grep 'No file to patch')
+				if [ "$patchresult_ret" != "0" ] ; then
+					if [ "$err_type" == "" ] ; then
+						echo -e "$patchresult_text"
+						echo ""
+						echo "Patch $file failed to apply: incorrect patch."
+						exit 1
+					else
+						if [ "$p_level" == "0" ] ; then
+							echo -e "$patchresult_text"
+							echo ""
+							echo "Failed to apply patch $file:"
+							exit 1
+						fi
+					fi
+				else
+					echo "Patch $file successfully applied with -p${p_level}"
+					break
+				fi
+				set -e
+				
+			done
 	
 		done
 	fi
+	echo ""
 }
 
 autobuild() {
