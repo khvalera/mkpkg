@@ -291,7 +291,7 @@ burn_patches() {
 			esac
 
 			# Trying -p1
-			for p_level in 2 1 0 ; do
+			for p_level in $p 2 1 0 ; do
 				set +e
 				patchresult_text="$($readfunc "$startdir/patches/$file" | LC_ALL=C patch -p${p_level} -f --verbose ${minus_t} 2>&1)"
 				patchresult_ret=$?
