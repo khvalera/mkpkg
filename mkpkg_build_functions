@@ -799,7 +799,7 @@ process_subpackages() {
 		unsetter
 		${pkg}
 
-	pkgdir="${startdir}/${pkgname}"
+		pkgdir="${startdir}/${pkgname}"
 		if [ "${ready_to_create}" == "yes" -a "${PARENT_ONLY}" != "1" ]; then
 			${pkg}_arch
 			if [ -n "${child_opts}" ]; then
