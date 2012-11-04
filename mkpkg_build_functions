@@ -783,6 +783,7 @@ build_sequence() {
 	d_echo "build_sequence() with ${pkgname}"
 	set_custom_opts
 	strip_binaries
+	gzip_man_and_info_pages
 	set_post_permissions
 	gen_meta_options
 	if [ "${createpkg}" == "yes" ]; then 
@@ -898,7 +899,6 @@ fi
 set +e
 
 copy_doinst
-gzip_man_and_info_pages
 install_desktop_and_pixmap
 
 #make_build_tree
