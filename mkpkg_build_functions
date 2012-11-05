@@ -509,7 +509,7 @@ gzip_man_and_info_pages() {
 	local pkginfodir="$pkgdir/usr/info"
 	if [ -d "$pkginfodir" ] ; then
 		local infolist
-		rm "$pkginfodir/dir.gz"
+		rm -f "$pkginfodir/dir.gz"
 		infolist=$(ls -1 "$pkginfodir")
 		if [ ! -z "$infolist" ] ; then
 			echo "" >> "$pkgdir/install/doinst.sh"
