@@ -71,11 +71,11 @@ get_extract_source() {
 					cd "${srcache}"
 					if [ ! ${ext_arg} ]; then
 						item=$(echo "$item" | sed 's/^svn:*//')
-						svn checkout $svn_opts $item ${loc_source}.src
-						cp -a -r "${srcache}/${loc_source}".src "${srcdir}"
+						svn checkout $svn_opts $item ${pkgname}_svn_${loc_source}.src
+						cp -a -r "${srcache}/${pkgname}_svn_${loc_source}".src "${srcdir}"
 					fi
 					if [ ! "${strict_version}" -a "${_first}" != "second" ]; then
-						cd "${loc_source}".src || exit 1
+						cd "${pkgname}_svn_${loc_source}".src || exit 1
 						pkgver+=_svn`svn info | grep Revi | cut -d ":" -f2 | cut -c2-`
 						cd - >/dev/null || exit 1
 					fi
@@ -86,13 +86,13 @@ get_extract_source() {
 
 					if [ ! ${ext_arg} ];then 
 						item=$(echo "$item" | sed 's/^git:*//')
-						if [ ! -d "${loc_source}.src" ]; then
-							git clone $item "${loc_source}.src"
+						if [ ! -d "${pkgname}_git_${loc_source}.src" ]; then
+							git clone $item "${pkgname}_git_${loc_source}.src"
 						else
-							cd "${loc_source}".src
+							cd "${pkgname}_git_${loc_source}".src
 							git pull
 						fi
-						cp -a -r "${srcache}/${loc_source}".src "${srcdir}"
+						cp -a -r "${srcache}/${pkgname}_git_${loc_source}".src "${srcdir}"
 					fi
 					if [ ! "${strict_version}" -a "${_first}" != "second" ]; then
 						pkgver+=_git`date "+%Y%m%d"`
@@ -104,13 +104,13 @@ get_extract_source() {
 					if [ ! ${ext_arg} ];then
 						#cd ${srcache}
 						item=$(echo "$item" | sed 's/^hg:*//')
-						if [ ! -d "${loc_source}.src" ]; then
-							hg clone $item "${loc_source}.src"
+						if [ ! -d "${pkgname}_hg_${loc_source}.src" ]; then
+							hg clone $item "${pkgname}_hg_${loc_source}.src"
 						else
-							cd "${loc_source}.src"
+							cd "${pkgname}_hg_${loc_source}.src"
 							hg pull && hg update  
 						fi
-						cp -a -r "${srcache}/${loc_source}".src "${srcdir}"
+						cp -a -r "${srcache}/${pkgname}_hg_${loc_source}".src "${srcdir}"
 					fi
 					if [ ! "${strict_version}" -a "${_first}" != "second" ]; then
 						pkgver+=_hg`date "+%Y%m%d"`
