@@ -1,0 +1,19 @@
+# Test abuild that should fail if all ok
+
+pkgname=test
+pkgver=1.0
+pkgbuild=1
+arch=("auto")
+
+shortdesc=("Test abuild that checks build stopping if build() function contains errors")
+
+tags=("develop app-misc")
+
+source=("")
+
+build() {
+	go_src_dir
+	burn_patches
+	do_something_that_cannot_be_done_at_all
+}
+

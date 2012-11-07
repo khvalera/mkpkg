@@ -296,6 +296,7 @@ burn_patches() {
 				patchresult_text="$($readfunc "$startdir/patches/$file" | LC_ALL=C patch -p${p_level} -f --verbose ${minus_t} 2>&1)"
 				patchresult_ret=$?
 				err_type=$(echo "$patchresult_text" | grep 'No file to patch')
+				set -e
 				if [ "$patchresult_ret" != "0" ] ; then
 					if [ "$err_type" == "" ] ; then
 						echo -e "$patchresult_text"
@@ -314,7 +315,6 @@ burn_patches() {
 					echo "Patch $file successfully applied with -p${p_level}"
 					break
 				fi
-				set -e
 				
 			done
 	
@@ -509,7 +509,7 @@ gzip_man_and_info_pages() {
 	local pkginfodir="$pkgdir/usr/info"
 	if [ -d "$pkginfodir" ] ; then
 		local infolist
-		rm "$pkginfodir/dir.gz"
+		rm -f "$pkginfodir/dir.gz"
 		infolist=$(ls -1 "$pkginfodir")
 		if [ ! -z "$infolist" ] ; then
 			echo "" >> "$pkgdir/install/doinst.sh"
