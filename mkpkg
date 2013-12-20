@@ -116,7 +116,7 @@ check_config() {
 			esac
 		fi
 		if [ "${interactive}" == "yes" ]; then
-		INTERACTIVE=1
+			INTERACTIVE=1
 		fi
 		if [ "${bad}" == "1" ];then
 			exit 1
@@ -336,6 +336,9 @@ done
 
 copy_abuild() {
 	d_echo "copy_abuild()"
+	if [ -f "${startdir}/ABUILD" ]; then
+		ask_yn "OVERWRITE_FILE ${startdir}/ABUILD" || exit 0
+	fi
 	if [ "${PWD_NOT_WRITABLE}" != "1" ]; then 
 		local _me=$(echo ${me} | sed "s,@, at ,")
 		sed "${MKPKG_DIR}/ABUILD" -e "s,%%%MAINTAINER%%%,${mn}," \
