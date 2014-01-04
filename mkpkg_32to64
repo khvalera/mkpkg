@@ -1,9 +1,15 @@
 #!/bin/bash
 # This script converts i686 package to x86_64 compat32 package by stripping unneeded files
 
-
 # Load global configuration
 . /etc/mkpkg.conf
+
+if [ -f "${MKPKG_DIR}/mkpkg_shared_functions" ]; then
+	. "${MKPKG_DIR}/mkpkg_shared_functions"
+else
+	echo "Error loading shared functions block"
+	exit 1
+fi
 
 PKGLIST="$@"
 
@@ -40,15 +46,22 @@ make_compat32() {
 	# Copy metadata
 	mkdir ${dest_dir}/install
 	cp ${orig_dir}/install/data.xml ${dest_dir}/install/data.xml
-
+	pkginfo="$(mkpkg_xml_parser $dest_dir/install/data.xml -p)"
+	pkgname=`echo $pkginfo | cut -d ' ' -f 1`
+	pkgver=`echo $pkginfo | cut -d ' ' -f 2`
+	pkgbuild=`echo $pkginfo | cut -d ' ' -f 4`
+	pkgarch=`echo $pkginfo | cut -d ' ' -f 3`
+	if [ ${pkgarch} != "i686" ]; then
+		show_message INCORRECT_ARCH_PACKAGE "${pkgarch}" "$PKGNAME"
+		exit
+	fi
 	# Copy libs
 	( cd ${orig_dir}
 		copied_once=0
 		for i in $(find . -name '*.so') $(find . -name '*.so.*') ; do
 			dirname=$(dirname $i)
 			check_dir_whitelist $dirname || continue
-			
-			echo "Moving lib $i"
+			show_message MOVING "$i"
 			mkdir -p ${dest_dir}/$(dirname $i)
 			cp -a $i ${dest_dir}/$i
 			copied_once=1
@@ -60,25 +73,21 @@ make_compat32() {
 	)
 
 	# Copy ABUILD
-	pkginfo="$(mkpkg_xml_parser $dest_dir/install/data.xml -p)"
-	pkgname=$(echo $pkginfo | sed 's/\s.*//g')
 	orig_abuild=$(basename ${orig_dir}/usr/src/BuildTrees/${pkgname}-*.build_tree.tar.xz)
 	dest_abuild=$(echo ${orig_abuild} | sed s/${pkgname}/${pkgname}32/g)
 	install -Dm0644 ${orig_dir}/usr/src/BuildTrees/${orig_abuild} ${dest_dir}/usr/src/BuildTrees/${dest_abuild} || echo "WARNING: No ABUILD in package"
 
 	# Do data.xml magic
-	echo "Replacing tags"
+	show_message REPLACING_TAGS
 	replace_tags ${dest_dir}
 
-	echo "Modifying meta"
-	modify_meta ${dest_dir}
+	show_message MODIFYING_METADATA
+	modify_meta ${dest_dir} ${pkgname}
 
-	echo "Modifying deps"
+	show_message MODIFYING_DEPS
 	modify_deps ${dest_dir}
 
-	
-
-	echo "Packing back"
+	show_message PACKING_BACK
 	# Package it and move to packages directory
 	( cd ${dest_dir} ; buildpkg ${package_out_dir}/ )
 	set +e
@@ -112,27 +121,21 @@ replace_tags() {
 
 modify_meta() {
 	dest_dir="$1"
-	pkginfo="$(mkpkg_xml_parser $dest_dir/install/data.xml -p)"
-	pkgname=$(echo $pkginfo | sed 's/\s.*//g')
-
+	pkgname="$2"
 	# Set package name
-	mpkg-setmeta ${dest_dir} --arch=x86_64 --name=${pkgname}32 
-	
+	mpkg-setmeta ${dest_dir} --arch=x86_64 --name=${pkgname}32
 	# Clear config files
 	mpkg-setmeta ${dest_dir} -F
-
 	# Check if provides value exists
 	provides="$(mkpkg_xml_parser $dest_dir/install/data.xml -P)"
 	if [ "$provides" != "" ] ; then
 		mpkg-setmeta ${dest_dir} --provides=${provides}32
 	fi
-
 	# Check if conflicts value exists
 	conflicts="$(mkpkg_xml_parser $dest_dir/install/data.xml -C)"
 	if [ "$conflicts" != "" ] ; then
 		mpkg-setmeta ${dest_dir} --conflicts=${conflicts}32
 	fi
-
 
 	return 0
 }
@@ -144,15 +147,12 @@ modify_deps() {
 	for d in $deps ; do
 		newdep_name="$(echo $d | sed 's/[>=<!].*//g')"
 		newdep_tail="$(echo $d | sed 's/^[^>=<!]*//g')"
-
 		depstring+="-d ${newdep_name}32${newdep_tail} "
 	done
 	mpkg-setmeta ${dest_dir} ${depstring}
 
 	return 0
 }
-
-
 
 # Run stuff
 for i in ${PKGLIST} ; do 
