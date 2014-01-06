@@ -1,161 +1,238 @@
 #!/bin/bash
 # This script converts i686 package to x86_64 compat32 package by stripping unneeded files
 
+mpkg_cache_dir="/var/mpkg/cache"
+
 # Load global configuration
 . /etc/mkpkg.conf
 
 if [ -f "${MKPKG_DIR}/mkpkg_shared_functions" ]; then
-	. "${MKPKG_DIR}/mkpkg_shared_functions"
+   . "${MKPKG_DIR}/mkpkg_shared_functions"
 else
-	echo "Error loading shared functions block"
-	exit 1
+   echo "Error loading shared functions block"
+   exit 1
 fi
 
 PKGLIST="$@"
 
 check_dir_whitelist() {
-	local DIR=$(echo $1 | sed 's/^\.//g')
-	local WHITELIST="/lib /usr/lib /usr/local/lib /usr/i486-slackware-linux/lib /usr/i686-slackware-linux/lib"
-	local bad=1
-	for check in $WHITELIST ; do
-		local zzz=$(echo $DIR | sed s:^${check}::g)
-		if [ "$DIR" != "$zzz" ] ; then
-			bad=0
-		fi
-	done
-	if [ "$bad" = "1" ] ; then
-		echo "Skipping files from $DIR"
-	fi
-	return $bad
+  local DIR=$(echo ${1} | sed 's/^\.//g')
+  local WHITELIST="/lib /usr/lib /usr/local/lib /usr/i486-slackware-linux/lib /usr/i686-slackware-linux/lib"
+  local bad=1
+  for check in ${WHITELIST} ; do
+      local zzz=$(echo ${DIR} | sed s:^${check}::g)
+      if [ "${DIR}" != "${zzz}" ] ; then
+         bad=0
+      fi
+  done
+  if [ "${bad}" = "1" ] ; then
+     echo "Skipping files from ${DIR}"
+  fi
+  return ${bad}
 }
 
 make_compat32() {
-	set -e
-	PKG_FULLPATH="$(readlink -f $1)"
-	PKGNAME=$(basename "$PKG_FULLPATH")
+  set -e
+  local pkg_file=$1
+  if ! [ -f "${pkg_file}" ]; then
+     echo "File not found ${pkg_file}"
+     exit 1
+  fi
+  PKG_FULLPATH="$(readlink -f ${pkg_file})"
+  PKGNAME=$(basename "${PKG_FULLPATH}")
 
-	# Create working directory
-	wd=${bt_working_dir}.${USER}/32to64/$PKGNAME
-	orig_dir=${wd}/orig
-	dest_dir=${wd}/dest
-	rm -rf $wd
-	mkdir -p $orig_dir
-	mkdir -p $dest_dir
-	( cd $orig_dir ; tar -xf "$PKG_FULLPATH" )
+  # Create working directory
+  wd=${bt_working_dir}.${USER}/32to64/${PKGNAME}
+  orig_dir=${wd}/orig
+  dest_dir=${wd}/dest
+  rm -rf "${wd}"
+  mkdir -p "${orig_dir}"
+  mkdir -p "${dest_dir}"
+  ( cd ${orig_dir} ; tar -xf "${PKG_FULLPATH}" )
 
-	# Copy metadata
-	mkdir ${dest_dir}/install
-	cp ${orig_dir}/install/data.xml ${dest_dir}/install/data.xml
-	pkginfo="$(mkpkg_xml_parser $dest_dir/install/data.xml -p)"
-	pkgname=`echo $pkginfo | cut -d ' ' -f 1`
-	pkgver=`echo $pkginfo | cut -d ' ' -f 2`
-	pkgbuild=`echo $pkginfo | cut -d ' ' -f 4`
-	pkgarch=`echo $pkginfo | cut -d ' ' -f 3`
-	if [ ${pkgarch} != "i686" ]; then
-		show_message INCORRECT_ARCH_PACKAGE "${pkgarch}" "$PKGNAME"
-		exit
-	fi
-	# Copy libs
-	( cd ${orig_dir}
-		copied_once=0
-		for i in $(find . -name '*.so') $(find . -name '*.so.*') ; do
-			dirname=$(dirname $i)
-			check_dir_whitelist $dirname || continue
-			show_message MOVING "$i"
-			mkdir -p ${dest_dir}/$(dirname $i)
-			cp -a $i ${dest_dir}/$i
-			copied_once=1
-		done
-		if [ "$copied_once" == "0" ] ; then
-			echo "ERROR: package has no libs, output will be empty. Aborting build"
-			exit 1
-		fi
-	)
+  # Copy metadata
+  mkdir ${dest_dir}/install
+  cp ${orig_dir}/install/data.xml ${dest_dir}/install/data.xml
+  pkginfo="$(mkpkg_xml_parser ${dest_dir}/install/data.xml -p)"
+  pkgname=`echo ${pkginfo} | cut -d ' ' -f 1`
+  pkgver=`echo ${pkginfo} | cut -d ' ' -f 2`
+  pkgbuild=`echo ${pkginfo} | cut -d ' ' -f 4`
+  pkgarch=`echo ${pkginfo} | cut -d ' ' -f 3`
+  if [ ${pkgarch} != "i686" ]; then
+     show_message INCORRECT_ARCH_PACKAGE "${pkgarch}" "${PKGNAME}"
+     exit
+  fi
+  # Copy libs
+  ( cd ${orig_dir}
+    copied_once=0
+    for i in $(find . -name '*.so') $(find . -name '*.so.*') ; do
+        dirname=$(dirname $i)
+        check_dir_whitelist ${dirname} || continue
+        show_message MOVING "${i}"
+        mkdir -p ${dest_dir}/$(dirname ${i})
+        cp -a $i ${dest_dir}/${i}
+        copied_once=1
+    done
+    if [ "${copied_once}" == "0" ] ; then
+       echo "ERROR: package has no libs, output will be empty. Aborting build"
+       exit 1
+    fi
+  )
 
-	# Copy ABUILD
-	orig_abuild=$(basename ${orig_dir}/usr/src/BuildTrees/${pkgname}-*.build_tree.tar.xz)
-	dest_abuild=$(echo ${orig_abuild} | sed s/${pkgname}/${pkgname}32/g)
-	install -Dm0644 ${orig_dir}/usr/src/BuildTrees/${orig_abuild} ${dest_dir}/usr/src/BuildTrees/${dest_abuild} || echo "WARNING: No ABUILD in package"
+  # Copy ABUILD
+  orig_abuild=$(basename ${orig_dir}/usr/src/BuildTrees/${pkgname}-*.build_tree.tar.xz)
+  dest_abuild=$(echo ${orig_abuild} | sed s/${pkgname}/${pkgname}32/g)
+  install -Dm0644 ${orig_dir}/usr/src/BuildTrees/${orig_abuild} ${dest_dir}/usr/src/BuildTrees/${dest_abuild} || echo "WARNING: No ABUILD in package"
 
-	# Do data.xml magic
-	show_message REPLACING_TAGS
-	replace_tags ${dest_dir}
+  # Do data.xml magic
+  show_message REPLACING_TAGS
+  replace_tags
 
-	show_message MODIFYING_METADATA
-	modify_meta ${dest_dir} ${pkgname}
+  show_message MODIFYING_METADATA
+  modify_meta
 
-	show_message MODIFYING_DEPS
-	modify_deps ${dest_dir}
+  show_message MODIFYING_DEPS
+  modify_deps
 
-	show_message PACKING_BACK
-	# Package it and move to packages directory
-	( cd ${dest_dir} ; buildpkg ${package_out_dir}/ )
-	set +e
+  show_message PACKING_BACK
+  # Package it and move to packages directory
+  ( cd ${dest_dir} ; buildpkg ${package_out_dir}/ )
+  rm -fr "${wd}"
+  echo "Delete temporary files"
+  set +e
 }
 
 replace_tags() {
-	dest_dir="$1"
-	# Modify metadata
-	# Tags
-	pkgtags="$(mkpkg_xml_parser $dest_dir/install/data.xml -t)"
-	taglist=
-	found=0
-	tagstring="--cleartags "
+  # Modify metadata tags
+  pkgtags="$(mkpkg_xml_parser ${dest_dir}/install/data.xml -t)"
+  taglist=
+  found=0
+  tagstring="--cleartags "
+  for tag in ${pkgtags}; do
+      #Не понятно зачем вместо первого тега compat32, а не добавляется?
+      local result="$(echo ${tag} | grep '-' || true)"
+      if [ -z "${result}" -a "${found}" == 0 ]; then
+         taglist+=" --add-tag=compat32 "
+         found=1
+      else
+         taglist+=" --add-tag=${tag} "
+         taglist+=" --add-tag=x86 "
+      fi
+  done
+  tagstring+="${taglist} "
+  mpkg-setmeta ${dest_dir} ${tagstring}
 
-	for tag in $pkgtags; do
-		result="$(echo $tag | grep '-' || true)"
-		if [ -z "${result}" -a "$found" == 0 ]; then
-			taglist+=" compat32 "
-			found=1
-		else
-			taglist+=" ${tag} "
-			taglist+=" x86 "
-		fi
-	done
-	for tg in ${taglist}; do
-		tagstring+="--add-tag=$tg "
-	done
-	mpkg-setmeta ${dest_dir} ${tagstring}
-	return 0
+  return 0
 }
 
 modify_meta() {
-	dest_dir="$1"
-	pkgname="$2"
-	# Set package name
-	mpkg-setmeta ${dest_dir} --arch=x86_64 --name=${pkgname}32
-	# Clear config files
-	mpkg-setmeta ${dest_dir} -F
-	# Check if provides value exists
-	provides="$(mkpkg_xml_parser $dest_dir/install/data.xml -P)"
-	if [ "$provides" != "" ] ; then
-		mpkg-setmeta ${dest_dir} --provides=${provides}32
-	fi
-	# Check if conflicts value exists
-	conflicts="$(mkpkg_xml_parser $dest_dir/install/data.xml -C)"
-	if [ "$conflicts" != "" ] ; then
-		mpkg-setmeta ${dest_dir} --conflicts=${conflicts}32
-	fi
+  # Set package name
+  mpkg-setmeta ${dest_dir} --arch=x86_64 --name=${pkgname}32
+  # Clear config files
+  mpkg-setmeta ${dest_dir} -F
+  # Check if provides value exists
+  provides="$(mkpkg_xml_parser ${dest_dir}/install/data.xml -P)"
+  if [ "${provides}" != "" ] ; then
+     mpkg-setmeta ${dest_dir} --provides=${provides}32
+  fi
+  # Check if conflicts value exists
+  conflicts="$(mkpkg_xml_parser ${dest_dir}/install/data.xml -C)"
+  if [ "${conflicts}" != "" ] ; then
+     mpkg-setmeta ${dest_dir} --conflicts=${conflicts}32
+  fi
 
-	return 0
+  return 0
+}
+
+find_package_directory() {
+  local result_func="$1"
+  local pkg_dir="$2"
+  local pkg_arch="$3"
+  [ -z "${pkg_arch}" ] && pkg_arch="*"
+  cd "${pkg_dir}"
+  for i in $(find . -name "${newdep_name}*-${pkg_arch}-*.txz") ; do
+      eval ${result_func}="$i"
+      return
+  done
+  eval ${result_func}=""
+  return 0
+}
+
+check_deps() {
+  echo "Checking dependency «${newdep_name}»"
+  local dep_ver=$(echo ${newdep_tail} | sed 's/^[>=<]*//g')
+  local find_package=""
+  find_package_directory find_package ${package_out_dir} "i686"
+  if [ -z "${find_package}" ]; then
+     find_package_directory find_package ${mpkg_cache_dir} "i686"
+     if [ -z ${find_package} ]; then
+        #Когда api будет закачивать всегда нужную архитектуру нужно убрать
+        find_package_directory find_package ${package_out_dir}
+        if [ -z "${find_package}" ]; then
+           wget --no-check-certificate -P ${package_out_dir}/deps "http://api.agilialinux.ru/pkg/${newdep_name}/i686/${dep_ver}"
+           find_package_directory find_package ${package_out_dir}/deps
+        else
+           echo "Found a package ${find_package} in the directories ${package_out_dir}"
+        fi
+     else
+        echo "Found a package ${find_package} in the directories ${mpkg_cache_dir}"
+     fi
+
+  else
+     echo "Found a package ${find_package} in the directories ${package_out_dir}"
+  fi
+  if [ -z ${find_package} ]; then
+     echo "Could not find package ${newdep_name}"
+     #Когда баги с зависимостями исправятся нужно убрать
+     local name_lib=`echo "${newdep_name}" | sed 's/\(.\{1,3\}\).*/\1/'`
+     if [ "${name_lib}" != "lib" ]; then
+        exit 1
+     else
+       echo "Add because the first three characters lib"
+       return 0
+     fi
+  fi
+  local find_package="$(readlink -f ${find_package})"
+  local deps_dir="${wd}/deps/${newdep_name}-${dep_ver}"
+  mkdir -p "${deps_dir}"
+  if ! [ -d "${deps_dir}" ]; then
+     echo "Failed to create directory ${deps_dir}"
+     exit 1
+  fi
+  cd "${deps_dir}"
+  tar -xf "${find_package}"
+  local find_dep_lib=1
+  for f in $(find . -name '*.so') $(find . -name '*.so.*') ; do
+      local dir_name=$(dirname $f)
+      check_dir_whitelist ${dir_name} || continue
+      find_dep_lib=0
+      break
+  done
+  return ${find_dep_lib}
 }
 
 modify_deps() {
-	dest_dir="$1"
-	deps="$(mkpkg_xml_parser $dest_dir/install/data.xml -d)"
-	depstring="-Z "
-	for d in $deps ; do
-		newdep_name="$(echo $d | sed 's/[>=<!].*//g')"
-		newdep_tail="$(echo $d | sed 's/^[^>=<!]*//g')"
-		depstring+="-d ${newdep_name}32${newdep_tail} "
-	done
-	mpkg-setmeta ${dest_dir} ${depstring}
+  deps="$(mkpkg_xml_parser ${dest_dir}/install/data.xml -d)"
+  local depstring="-Z "
+  for d in $deps ; do
+      newdep_name="$(echo $d | sed 's/[>=<!].*//g')"
+      newdep_tail="$(echo $d | sed 's/^[^>=<!]*//g')"
+      set +e
+      check_deps
+      if [ $? = 1 ]; then
+         echo "Not added a package «${newdep_name}»"
+         continue
+      fi
+      set -e
+      local depstring+="-d ${newdep_name}32${newdep_tail} "
+  done
+  mpkg-setmeta "${dest_dir}" ${depstring}
 
-	return 0
+  return 0
 }
 
 # Run stuff
-for i in ${PKGLIST} ; do 
-	make_compat32 $i
+for i in ${PKGLIST} ; do
+  make_compat32 ${i}
 done
 
