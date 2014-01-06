@@ -257,14 +257,14 @@ esac
 MKPKG_VER)############################################################
 #############
 case $lang in
-ru) echo "Версия скрипта ${MKPKG_VER}"
-    echo "Мейнтейнер: ${mn} ; Электронная почта: ${me}"
+ru) echo -e "Версия скрипта ${MKPKG_VER}"
+    echo -e "Мейнтейнер: ${mn} ; Электронная почта: ${me}"
 	;;
-uk) echo "Версія скрипта ${MKPKG_VER}"
-    echo "Мейнтейнер: ${mn} ; E-Mail: {me}"
+uk) echo -e "Версія скрипта ${MKPKG_VER}"
+    echo -e "Мейнтейнер: ${mn} ; E-Mail: {me}"
 	;;
-*)  echo "mkpkg script version ${MKPKG_VER}"
-    echo "Maintainer: ${mn} ; E-Mail: ${me}"
+*)  echo -e "mkpkg script version ${MKPKG_VER}"
+    echo -e "Maintainer: ${mn} ; E-Mail: ${me}"
 esac
 ;;
 
@@ -272,9 +272,9 @@ esac
 FILE_NOT_FOUND)#######################################################
 ################
 case $lang in 
-ru) echo "Файл \"$2\" не найден";;
-uk) echo "Файл \"$2\" не знайдено";;
-*) echo "File \"$2\" not found";;
+ru) echo -e "Файл \"$2\" не найден";;
+uk) echo -e "Файл \"$2\" не знайдено";;
+*) echo -e "File \"$2\" not found";;
 esac
 ;;
 
@@ -282,9 +282,9 @@ esac
 UNKNOWN_ARG)##########################################################
 ###############
 case $lang in
-ru) echo "Неизвестный аргумент $2";;
-uk) echo "Невідомий аргумент $2";;
-*) echo "Unknown argement $2";;
+ru) echo -e "Неизвестный аргумент $2";;
+uk) echo -e "Невідомий аргумент $2";;
+*) echo -e "Unknown argement $2";;
 esac
 ;;
 
@@ -292,9 +292,9 @@ esac
 UNKNOWN_CUSTOM_OPT*)##########################################################
 ###############
 case $lang in
-ru) echo "Неизвестная переменная '$2' в custom_opts";;
-uk) echo "Невідома змінна $2 в custom_opts";;
-*) echo "Unknown var '$2' in custom_opts";;
+ru) echo -e "Неизвестная переменная '$2' в custom_opts";;
+uk) echo -e "Невідома змінна $2 в custom_opts";;
+*) echo -e "Unknown var '$2' in custom_opts";;
 esac
 ;;
 
@@ -302,527 +302,590 @@ esac
 NO_ABUILD)##########################################################
 ##############
 case $lang in
-ru) echo "Файл ABUILD не найден в текущей директории";;
-uk) echo "Файл ABUILD не знайдений у поточній директорії";;
-*) echo "No ABUILD file found in current directory";;
+ru) echo -e "Файл ABUILD не найден в текущей директории";;
+uk) echo -e "Файл ABUILD не знайдений у поточній директорії";;
+*) echo -e "No ABUILD file found in current directory";;
 esac;;
 
 ###############
 VAR_NOT_SET)##########################################################
 ###############
 case $lang in
-ru) echo "Переменная \"$2\" не установлена";;
-uk) echo "Змінна \"$2\" не встановлена";;
-*) echo "Variable \"$2\" not set";;
+ru) echo -e "Переменная \"$2\" не установлена";;
+uk) echo -e "Змінна \"$2\" не встановлена";;
+*) echo -e "Variable \"$2\" not set";;
 esac;;
 
 #################
 NO_BUILD_FUNC)########################################################
 #################
 case $lang in
-ru) echo "Функция build() не найдена";;
-uk) echo "Функція build() не знайдена";;
-*) echo "Function build() not found";;
+ru) echo -e "Функция build() не найдена";;
+uk) echo -e "Функція build() не знайдена";;
+*) echo -e "Function build() not found";;
 esac;;
 
 ################
 I_M_NOT_ROOT)##########################################################
 ################
 case $lang in
-ru) echo "Необходимы права суперпользователя root";;
-uk) echo "Необхідні права суперкористувача root";;
-*) echo "You need to be root";;
+ru) echo -e "Необходимы права суперпользователя root";;
+uk) echo -e "Необхідні права суперкористувача root";;
+*) echo -e "You need to be root";;
 esac;;
 
 #################
 ARCH_MISMATCH)########################################################
 #################
 case $lang in
-ru) echo "Ошибка выбора архитектуры. Установлена $2, в то время, как используется $3. Проверьте ваш ABUILD.";;
-uk) echo "Помилка вибору архітектури. Встановлено $2, в той час, як використовується $3. Перевірте ваш ABUILD.";;
-*) echo "ARCH mismatch: got $2 while we have $3. Check your ABUILD";;
+ru) echo -e "Ошибка выбора архитектуры. Установлена $2, в то время, как используется $3. Проверьте ваш ABUILD.";;
+uk) echo -e "Помилка вибору архітектури. Встановлено $2, в той час, як використовується $3. Перевірте ваш ABUILD.";;
+*) echo -e "ARCH mismatch: got $2 while we have $3. Check your ABUILD";;
 esac;;
 
 ###########
 NO_DESC)##############################################################
 ###########
 case $lang in
-ru) echo "Файл slack-desc не найден, и переменная shortdesc не установлена. Описание пакета недоступно.";;
-uk) echo "Файл slack-desc не знайдений, і змінна shortdesc не встановлена. Опис пакета недоступний.";;
-*) echo "slack-desc not found, and shortdesc var is not set. Fix it, please";;
+ru) echo -e "Файл slack-desc не найден, и переменная shortdesc не установлена. Описание пакета недоступно.";;
+uk) echo -e "Файл slack-desc не знайдений, і змінна shortdesc не встановлена. Опис пакета недоступний.";;
+*) echo -e "slack-desc not found, and shortdesc var is not set. Fix it, please";;
 esac;;
 
 ############
 SB_READY)#############################################################
 ############
 case $lang in 
-ru) echo "----------SlackBuild успешно создан!----------";;
-uk) echo "----------SlackBuild успішно створений!----------";;
-*) echo "----------SlackBuild created!-----------";;
+ru) echo -e "----------SlackBuild успешно создан!----------";;
+uk) echo -e "----------SlackBuild успішно створений!----------";;
+*) echo -e "----------SlackBuild created!-----------";;
 esac;;
 
 ###########
 NO_LONG)##############################################################
 ###########
 case $lang in
-ru) echo "В переменной \"tags\" отсутствует длинный тег";;
-uk) echo "У змінної \"tags\" відсутній довгий тег";;
-*) echo "There is no long tag in \"tags\" variable";;
+ru) echo -e "В переменной \"tags\" отсутствует длинный тег";;
+uk) echo -e "У змінної \"tags\" відсутній довгий тег";;
+*) echo -e "There is no long tag in \"tags\" variable";;
 esac;;
 
 ###########
 NO_SHORT)##############################################################
 ###########
 case $lang in
-ru) echo "В переменной \"tags\" отсутствует короткий тег";;
-uk) echo "У змінної \"tags\" відсутній короткий тег";;
-*) echo "There is no short tag in \"tags\" variable";;
+ru) echo -e "В переменной \"tags\" отсутствует короткий тег";;
+uk) echo -e "У змінної \"tags\" відсутній короткий тег";;
+*) echo -e "There is no short tag in \"tags\" variable";;
 esac;;
 
 ###########
 BAD_DASH)##############################################################
 ###########
 case $lang in
-ru) echo "В значениях переменных \"pkgver\" и \"pkgbuild\"  тире недопустимо, но найдено \"$2\"";;
-uk) echo "У значеннях змінних \"pkgver\" і \"pkgbuild\" тире неприпустимо, але знайдено \"$2\"";;
-*) echo "There is no dash allowed in \"pkgver\" and \"pkgbuild\" variables, but \"$2\" was found";;
+ru) echo -e "В значениях переменных \"pkgver\" и \"pkgbuild\"  тире недопустимо, но найдено \"$2\"";;
+uk) echo -e "У значеннях змінних \"pkgver\" і \"pkgbuild\" тире неприпустимо, але знайдено \"$2\"";;
+*) echo -e "There is no dash allowed in \"pkgver\" and \"pkgbuild\" variables, but \"$2\" was found";;
 esac;;
 
 ###########
 UNKNOWN_TAG)##############################################################
 ###########
 case $lang in
-ru) echo "Неизвестный тег \"$2\"";;
-uk) echo "Невідомий тег \"$2\"";;
-*) echo "Unknown tag \"$2\"";;
+ru) echo -e "Неизвестный тег \"$2\"";;
+uk) echo -e "Невідомий тег \"$2\"";;
+*) echo -e "Unknown tag \"$2\"";;
 esac;;
 
 ###########
 BUILD_DEP_UNRESOLVED)##############################################################
 ###########
 case $lang in
-ru) echo "Неудовлетворённые зависимости: $2. Найдена версия $3.";;
-uk) echo "Незадоволені залежності: $2. Знайдена версія $3.";;
-*) echo "Unresolved dependencies: $2. Found $3.";;
+ru) echo -e "Неудовлетворённые зависимости: $2. Найдена версия $3.";;
+uk) echo -e "Незадоволені залежності: $2. Знайдена версія $3.";;
+*) echo -e "Unresolved dependencies: $2. Found $3.";;
 esac;;
 
 ###########
 BUILD_DEP_NOT_FOUND)##############################################################
 ###########
 case $lang in
-ru) echo "Неудовлетворённые зависимости: $2. Пакет не найден.";;
-uk) echo "Незадоволені залежності: $2. Пакет не знайдений.";;
-*) echo "Unresolved dependencies: $2. Package not found.";;
+ru) echo -e "Неудовлетворённые зависимости: $2. Пакет не найден.";;
+uk) echo -e "Незадоволені залежності: $2. Пакет не знайдений.";;
+*) echo -e "Unresolved dependencies: $2. Package not found.";;
 esac;;
 
 ###########
 BT_BAD_FILE_NAME)##############################################################
 ###########
 case $lang in
-ru) echo "Имя файла архива дерева сборки должно содержать \".build_tree.tar.xz\", а у Вас $2";;
-uk) echo "Файл архіву дерева збирання повинен містити \".build_tree.tar.xz\", а у Вас $2";;
-*) echo "Build tree archive name must contains \".build_tree.tar.xz\", but you have $2";;
+ru) echo -e "Имя файла архива дерева сборки должно содержать \".build_tree.tar.xz\", а у Вас $2";;
+uk) echo -e "Файл архіву дерева збирання повинен містити \".build_tree.tar.xz\", а у Вас $2";;
+*) echo -e "Build tree archive name must contains \".build_tree.tar.xz\", but you have $2";;
 esac;;
 
 ###########
 BT_NO_ABUILD)##############################################################
 ###########
 case $lang in
-ru) echo "В архиве дерева сборки не найден файл ABUILD";;
-uk) echo "В архіві дерева збірки не знайдений файл ABUILD";;
-*) echo "No ABUILD file found in your build tree archlive";;
+ru) echo -e "В архиве дерева сборки не найден файл ABUILD";;
+uk) echo -e "В архіві дерева збірки не знайдений файл ABUILD";;
+*) echo -e "No ABUILD file found in your build tree archlive";;
 esac;;
 
 ###########
 BT_NO_ARCHIVE)##############################################################
 ###########
 case $lang in
-ru) echo "$2 не является архивом";;
-uk) echo "$2 не є архівом";;
-*) echo "$2 is not an archive";;
+ru) echo -e "$2 не является архивом";;
+uk) echo -e "$2 не є архівом";;
+*) echo -e "$2 is not an archive";;
 esac;;
 
 ###########
 BAD_PROVIDE)##############################################################
 ###########
 case $lang in
-ru) echo "Имя пакета должно содержать значение переменной provides";;
-uk) echo "Ім'я пакету має містити значення змінної provides";;
-*) echo "Package name must contains provides variable value";;
+ru) echo -e "Имя пакета должно содержать значение переменной provides";;
+uk) echo -e "Ім'я пакету має містити значення змінної provides";;
+*) echo -e "Package name must contains provides variable value";;
 esac;;
 
 ###########
 PKG_HASNT_BT)##############################################################
 ###########
 case $lang in
-ru) echo "В пакете нет дерева сборки";;
-uk) echo "У пакеті немає дерева збирання";;
-*) echo "There is no build tree archive in this package";;
+ru) echo -e "В пакете нет дерева сборки";;
+uk) echo -e "У пакеті немає дерева збирання";;
+*) echo -e "There is no build tree archive in this package";;
 esac;;
 
 ###########
 NO_CONFIG_FILE)##############################################################
 ###########
 case $lang in
-ru) echo "Не найден файл конфигурации /etc/mkpkg.conf";;
-uk) echo "Не знайдений файл конфігурації /etc/mkpkg.conf";;
-*) echo "Config file /etc/mkpkg.conf not found";;
+ru) echo -e "Не найден файл конфигурации /etc/mkpkg.conf";;
+uk) echo -e "Не знайдений файл конфігурації /etc/mkpkg.conf";;
+*) echo -e "Config file /etc/mkpkg.conf not found";;
 esac;;
 
 ###########
 DEPRECATE_MOPSBUILD)##############################################################
 ###########
 case $lang in
-ru) echo "Устаревшее название скрипта сборки MOPSBUILD. Он будет переименован в ABUILD";;
-uk) echo "Застаріла назва скрипта збірки MOPSBUILD. Він буде перейменований в ABUILD";;
-*) echo "Deprecated build script name MOPSBUILD. It will be renamed to ABUILD";;
+ru) echo -e "Устаревшее название скрипта сборки MOPSBUILD. Он будет переименован в ABUILD";;
+uk) echo -e "Застаріла назва скрипта збірки MOPSBUILD. Він буде перейменований в ABUILD";;
+*) echo -e "Deprecated build script name MOPSBUILD. It will be renamed to ABUILD";;
 esac;;
 
 ###########
 WORK_DIR)##############################################################
 ###########
 case $lang in
-ru) echo "Изменение рабочей директории на $2";;
-uk) echo "Зміна робочої директорії на $2";;
-*) echo "Changing working dir to $2";;
+ru) echo -e "Изменение рабочей директории на $2";;
+uk) echo -e "Зміна робочої директорії на $2";;
+*) echo -e "Changing working dir to $2";;
 esac;;
 
 ###########
 CACHE_DIR_NOT_SET)##############################################################
 ###########
 case $lang in
-ru) echo "Не установлена переменная 'src_cache_dir' в /etc/mkpkg.conf, а использование кеша включено. Либо установите директорию, либо отключите использование кеша.";;
-uk) echo "Не встановлена змінна 'src_cache_dir' в /etc/mkpkg.conf, а використання кеша включено. Або встановіть директорію, або відключить використання кеша.";;
-*) echo "'src_cache_dir' variable is not set, but cache using is enabled. Either set it, or disable cache using";;
+ru) echo -e "Не установлена переменная 'src_cache_dir' в /etc/mkpkg.conf, а использование кеша включено. Либо установите директорию, либо отключите использование кеша.";;
+uk) echo -e "Не встановлена змінна 'src_cache_dir' в /etc/mkpkg.conf, а використання кеша включено. Або встановіть директорію, або відключить використання кеша.";;
+*) echo -e "'src_cache_dir' variable is not set, but cache using is enabled. Either set it, or disable cache using";;
 esac;;
 
 ###########
 CACHE_DIR_NOT_WRITABLE)##############################################################
 ###########
 case $lang in
-ru) echo "Директория кеша $2 недоступна для записи";;
-uk) echo "Директория кеша $2 недоступна для записи";;
-*) echo "Cache directory $2 is not writable";;
+ru) echo -e "Директория кеша $2 недоступна для записи";;
+uk) echo -e "Директория кеша $2 недоступна для записи";;
+*) echo -e "Cache directory $2 is not writable";;
 esac;;
 
 ###########
 NO_INFO_IN_XML)##############################################################
 ###########
 case $lang in
-ru) echo "Не установлены имя и почта мейнтейнера в настройках mpkg. Установите их с помощью mpkg-maintainer";;
-uk) echo "Не встановлені ім'я і пошта мейнтейнера в налаштуваннях mpkg. Встановіть їх за допомогою mpkg-maintainer";;
-*) echo "No maintainer name and email specified in mpkg settings. Set it with mpkg-maintainer";;
+ru) echo -e "Не установлены имя и почта мейнтейнера в настройках mpkg. Установите их с помощью mpkg-maintainer";;
+uk) echo -e "Не встановлені ім'я і пошта мейнтейнера в налаштуваннях mpkg. Встановіть їх за допомогою mpkg-maintainer";;
+*) echo -e "No maintainer name and email specified in mpkg settings. Set it with mpkg-maintainer";;
 esac;;
 
 ###########
 NOT_ROOT)##############################################################
 ###########
 case $lang in
-ru) echo "Нельзя использовать скрипт от пользователя root.";;
-uk) echo "Не можна використовувати скрипт від користувача root.";;
-*) echo "You can not use a script as root.";;
+ru) echo -e "Нельзя использовать скрипт от пользователя root.";;
+uk) echo -e "Не можна використовувати скрипт від користувача root.";;
+*) echo -e "You can not use a script as root.";;
 esac;;
 
 ###########
 BT_DIR_NOT_WRITABLE)##############################################################
 ###########
 case $lang in
-ru) echo "Временная директория $2 не доступна для записи";;
-uk) echo "Тимчасова директорія $2 не доступна для запису";;
-*) echo "Temp directory $2 is not writable";;
+ru) echo -e "Временная директория $2 не доступна для записи";;
+uk) echo -e "Тимчасова директорія $2 не доступна для запису";;
+*) echo -e "Temp directory $2 is not writable";;
 esac;;
 
 ###########
 BAD_DESC*)##############################################################
 ###########
 case $lang in
-ru) echo "Ошибка описания пакета '$2': длина слова в описании не может превышать 79 символов";;
-uk) echo "Помилка опису пакета '$2': довжина слова в описі не може перевищувати 79 символів";;
-*) echo "There is an error in a package '$2' description: single word can't be longer than 79 simbols";;
+ru) echo -e "Ошибка описания пакета '$2': длина слова в описании не может превышать 79 символов";;
+uk) echo -e "Помилка опису пакета '$2': довжина слова в описі не може перевищувати 79 символів";;
+*) echo -e "There is an error in a package '$2' description: single word can't be longer than 79 simbols";;
 esac;;
 
 ###########
 BUILD_ERROR)##############################################################
 ###########
 case $lang in
-ru) echo "!!!!----[Произошла ошибка при сборке пакета $pkgname]----!!!!";;
-uk) echo "!!!!----[Сталася помилка при збірці пакету $pkgname]----!!!!";;
-*) echo "!!!!----[Error building package $pkgname]----!!!!";;
+ru) echo -e "\e[31m!!!!----[\e[0mПроизошла ошибка при сборке пакета ${pkgname}\e[31m]----!!!!\e[0m";;
+uk) echo -e "\e[31m!!!!----[\e[0mСталася помилка при збірці пакету ${pkgname}\e[31m]----!!!!\e[0m";;
+*) echo -e "\e[31m!!!!----[\e[0mError building package ${pkgname}\e[31m]----!!!!\e[0m";;
 esac;;
 
 ###########
 BAD_WDM*)#######################################################
 ###########
 case $lang in
-ru) echo "Некорректный режим -wdm $2. Допускаются только один из режимов remote|cwd|auto";;
-uk) echo "Некоректний режим-wdm $2. Допускаються лише один з режимів remote|cwd|auto";;
-*) echo "Invalid directory mode -wdm $2. Must be one of remote|cwd|auto";;
+ru) echo -e "Некорректный режим -wdm $2. Допускаются только один из режимов remote|cwd|auto";;
+uk) echo -e "Некоректний режим-wdm $2. Допускаються лише один з режимів remote|cwd|auto";;
+*) echo -e "Invalid directory mode -wdm $2. Must be one of remote|cwd|auto";;
 esac;;
 
 ###########
 DEPRECATED_VAR*)#######################################################
 ###########
 case $lang in
-ru) echo "!!!!--[Внимание! Используется устаревшая переменная $2 в ABUILD]--!!!!";;
-uk) echo "!!!!--[Увага! Використовується застаріла змінна $2 в ABUILD]--!!!!";;
-*) echo "!!!!--[Warning! Deprecated variable $2 in ABUILD]--!!!!";;
+ru) echo -e "!!!!--[Внимание! Используется устаревшая переменная $2 в ABUILD]--!!!!";;
+uk) echo -e "!!!!--[Увага! Використовується застаріла змінна $2 в ABUILD]--!!!!";;
+*) echo -e "!!!!--[Warning! Deprecated variable $2 in ABUILD]--!!!!";;
 esac;;
 
 ###########
 SOURCE_EXTR_FAILED)##############################################################
 ###########
 case $lang in
-ru) echo "Ошибка при распаковке исходников!";;
-uk) echo "Помилка при розпакуванні ісходників!";;
-*) echo "Error unpacking sources!";;
+ru) echo -e "\e[31mОшибка\e[0m при распаковке исходников!";;
+uk) echo -e "\e[31mПомилка\e[0m при розпакуванні ісходників!";;
+*) echo -e "\e[31mError\e[0m unpacking sources!";;
 esac;;
 
 ###########
 NO_PKG_FUNC*)##############################################################
 ###########
 case $lang in
-ru) echo "В ABUILD не найдена функция, указанная в переменной 'pkglist': $2";;
-uk) echo "У ABUILD не знайдена функція, зазначена у змінній 'pkglist': $2";;
-*) echo "Function, specified in 'pkglist' variable not found in ABUILD: $2";;
+ru) echo -e "В ABUILD не найдена функция, указанная в переменной 'pkglist': $2";;
+uk) echo -e "У ABUILD не знайдена функція, зазначена у змінній 'pkglist': $2";;
+*) echo -e "Function, specified in 'pkglist' variable not found in ABUILD: $2";;
 esac;;
 
 ###########
 ERROR_MAKING_PACKAGE_DIR_DIR*)##############################################################
 ###########
 case $lang in
-ru) echo "Ошибка создания директории для размещения готовых пакетов $2";;
-uk) echo "Помилка створення директорії для розміщення готових пакетів $2";;
-*) echo "Error creating directory for compiled packages $2";;
+ru) echo -e "\e[31mОшибка\e[0m создания директории для размещения готовых пакетов $2";;
+uk) echo -e "\e[31mПомилка\e[0m створення директорії для розміщення готових пакетів $2";;
+*) echo -e "\e[31mError\e[0m creating directory for compiled packages $2";;
 esac;;
 
 ###########
 ERROR_MAKING_BT_DIR*)##############################################################
 ###########
 case $lang in
-ru) echo "Ошибка создания временной директории $2";;
-uk) echo "Помилка створення тимчасової директорії $2";;
-*) echo "Error creating temp directory :$2";;
+ru) echo -e "\e[31mОшибка\e[0m создания временной директории $2";;
+uk) echo -e "\e[31mПомилка\e[0m створення тимчасової директорії $2";;
+*) echo -e "\e[31mError\e[0m creating temp directory :$2";;
 esac;;
 
 ###########
 NO_pkg_files*)##############################################################
 ###########
 case $lang in
-ru) echo "Не установлена переменная 'pkg_files' в функции $2";;
-uk) echo "Не встановлена змінна 'pkg_files' в функції $2";;
-*) echo "'pkg_files' variable is not set in $2 function";;
+ru) echo -e "Не установлена переменная 'pkg_files' в функции $2";;
+uk) echo -e "Не встановлена змінна 'pkg_files' в функції $2";;
+*) echo -e "'pkg_files' variable is not set in $2 function";;
 esac;;
 
 ###########
 NO_pkg_file_EXIST*)##############################################################
 ###########
 case $lang in
-ru) echo "Директория '$3', установленная в функции $2 не существует";;
-uk) echo "Директорія '$3', встановлена в функції $2 не існує";;
-*) echo "Directory '$3', specified in $2 function does not exist";;
+ru) echo -e "Директория '$3', установленная в функции $2 не существует";;
+uk) echo -e "Директорія '$3', встановлена в функції $2 не існує";;
+*) echo -e "Directory '$3', specified in $2 function does not exist";;
 esac;;
 
 ###########
 ERR_STARTDIR_PKG)##############################################################
 ###########
 case $lang in
-ru) echo "В вашем ABUILD найдено сочетание \"\$startdir/pkg\" или его вариант. Замените его на \"\${pkgdir}\"";;
-uk) echo "У вашому ABUILD знайдено поєднання \"\$startdir/pkg\" або його варіант. Замініть його на \"\${pkgdir}\"";;
-*) echo "There is \"\$startdir/pkg\" or smth like that was found in your ABUILD. Replace it with \"\${pkgdir}\"";;
+ru) echo -e "В вашем ABUILD найдено сочетание \"\$startdir/pkg\" или его вариант. Замените его на \"\${pkgdir}\"";;
+uk) echo -e "У вашому ABUILD знайдено поєднання \"\$startdir/pkg\" або його варіант. Замініть його на \"\${pkgdir}\"";;
+*) echo -e "There is \"\$startdir/pkg\" or smth like that was found in your ABUILD. Replace it with \"\${pkgdir}\"";;
 esac;;
 
 ###########
 ERR_STARTDIR_SRC)##############################################################
 ###########
 case $lang in
-ru) echo "В вашем ABUILD найдено сочетание \"\$startdir/src\" или его вариант. Замените его на \"\${srcdir}\"";;
-uk) echo "У вашому ABUILD знайдено поєднання \"\$startdir/src\" або його варіант. Замініть його на \"\${srcdir}\"";;
-*) echo "There is \"\$startdir/src\" or smth like that was found in your ABUILD. Replace it with \"\${srcdir}\"";;
+ru) echo -e "В вашем ABUILD найдено сочетание \"\$startdir/src\" или его вариант. Замените его на \"\${srcdir}\"";;
+uk) echo -e "У вашому ABUILD знайдено поєднання \"\$startdir/src\" або його варіант. Замініть його на \"\${srcdir}\"";;
+*) echo -e "There is \"\$startdir/src\" or smth like that was found in your ABUILD. Replace it with \"\${srcdir}\"";;
 esac;;
 
 ###########
 BEGIN_UNPACK*)##############################################################
 ###########
 case $lang in
-ru) echo "Распаковывается файл $2. Пожалуйста, подождите.";;
-uk) echo "Розпаковується файл $2. Будь ласка, почекайте.";;
-*) echo "File $2 is being unpacked now. Please wait.";;
+ru) echo -e "Распаковывается файл $2. Пожалуйста, подождите.";;
+uk) echo -e "Розпаковується файл $2. Будь ласка, почекайте.";;
+*) echo -e "File $2 is being unpacked now. Please wait.";;
 esac;;
 
 ###########
 PWD_NOT_WRITABLE)##############################################################
 ###########
 case $lang in
-ru) echo "$(pwd) не доступна для записи.";;
-uk) echo "$(pwd) не доступна для запису.";;
-*) echo "$(pwd) not writable";;
+ru) echo -e "$(pwd) не доступна для записи.";;
+uk) echo -e "$(pwd) не доступна для запису.";;
+*) echo -e "$(pwd) not writable";;
 esac;;
 
 ###########
 BAD_FARM_ARCH*)##############################################################
 ###########
 case $lang in
-ru) echo "На сборочном пакетном комбинате установлена некорректная архитектура $2. Проверьте локальный конфигурационный файл mkpkg";;
-uk) echo "На складальному пакетному комбінаті встановлена некоректна архітектура $2. Перевірте локальний конфігураційний файл mkpkg";;
-*) echo "Build Farm has incorrect arch type $2. Check local mkpkg config";;
+ru) echo -e "На сборочном пакетном комбинате установлена некорректная архитектура $2. Проверьте локальный конфигурационный файл mkpkg";;
+uk) echo -e "На складальному пакетному комбінаті встановлена некоректна архітектура $2. Перевірте локальний конфігураційний файл mkpkg";;
+*) echo -e "Build Farm has incorrect arch type $2. Check local mkpkg config";;
 esac;;
 
 ###########
 TOO_MANY_TAGS*)##############################################################
 ###########
 case $lang in
-ru) echo "Пакет $2 имеет зашкаливающее количество тегов (>2). Теги 'x86' и 'proptietary' не считаются.";;
-uk) echo "Пакет $2 має зашкалюючу кількість тегів (>2). Теги 'x86' та 'proptietary' не вважаються.";;
-*) echo "Package $2 has too many tags (>2). 'x86' and 'proprietary' tags are not counted.";;
+ru) echo -e "Пакет $2 имеет зашкаливающее количество тегов (>2). Теги 'x86' и 'proptietary' не считаются.";;
+uk) echo -e "Пакет $2 має зашкалюючу кількість тегів (>2). Теги 'x86' та 'proptietary' не вважаються.";;
+*) echo -e "Package $2 has too many tags (>2). 'x86' and 'proprietary' tags are not counted.";;
 esac;;
 
 ###########
 PACKAGE_DIR_NOT_WRITABLE*)##############################################################i
 ###########
 case $lang in
-ru) echo "Директория для готовых пакетов $2 не доступна для записи.";;
-uk) echo "Директорія для готових пакетів $2 не доступна для запису.";;
-*) echo "Package dir $2 is write protected.";;
+ru) echo -e "Директория для готовых пакетов $2 не доступна для записи.";;
+uk) echo -e "Директорія для готових пакетів $2 не доступна для запису.";;
+*) echo -e "Package dir $2 is write protected.";;
 esac;;
 
 ###########
 BAD_REMOTE_DIR*)##############################################################i
 ###########
 case $lang in
-ru) echo "Неверный режим work_dir_mode: $2";;
-uk) echo "Невірний режим work_dir_mode: $2";;
-*) echo "Wrong work_dir_mode setting: $2";;
+ru) echo -e "Неверный режим work_dir_mode: $2";;
+uk) echo -e "Невірний режим work_dir_mode: $2";;
+*) echo -e "Wrong work_dir_mode setting: $2";;
 esac;;
 
 ############
 YES_OR_NO)##############################################################i
 ###########
 case $lang in
-ru) echo "Введите \"yes\" или \"no\"";;
-uk) echo "Введіть \"yes\" или \"no\"";;
-*) echo "Please enter \"yes\" or \"no\"";;
+ru) echo -e "Введите \"yes\" или \"no\"";;
+uk) echo -e "Введіть \"yes\" или \"no\"";;
+*) echo -e "Please enter \"yes\" or \"no\"";;
 esac;;
 
 ##########
 ARE_YOU_SURE)##############################################################i
 ###########
 case $lang in
-ru) echo "Обнаружен lock-файл. Вероятно, скрипт сборки с этим ABUILD уже запущен. Продолжить всё равно? (yes/no)";;
-uk) echo "Виявлений lock-файл. Ймовірно, скрипт збірки з цим ABUILD вже запущений. Продовжити? (yes/no)";;
-*) echo "Lock file found. May be another mkpkg script already running with this ABUILD. Continue anyway? (yes/no)";;
+ru) echo -e "Обнаружен lock-файл. Вероятно, скрипт сборки с этим ABUILD уже запущен. Продолжить всё равно? (yes/no)";;
+uk) echo -e "Виявлений lock-файл. Ймовірно, скрипт збірки з цим ABUILD вже запущений. Продовжити? (yes/no)";;
+*) echo -e "Lock file found. May be another mkpkg script already running with this ABUILD. Continue anyway? (yes/no)";;
 esac;;
 
 ##########
 MKPKG_LOCKED)##############################################################i
 ###########
 case $lang in
-ru) echo "Обнаружен lock файл. Вероятно, скрипт сборки с этим ABUILD уже запущен.";;
-uk) echo "Виявлений lock файл. Ймовірно, скрипт збірки з цим ABUILD вже запущений.";;
-*) echo "Lock file found. May be another mkpkg script already running with this ABUILD.";;
+ru) echo -e "Обнаружен lock файл. Вероятно, скрипт сборки с этим ABUILD уже запущен.";;
+uk) echo -e "Виявлений lock файл. Ймовірно, скрипт збірки з цим ABUILD вже запущений.";;
+*) echo -e "Lock file found. May be another mkpkg script already running with this ABUILD.";;
 esac;;
 
 ##########
 NOT_A_NUMBER*)##############################################################i
 ###########
 case $lang in
-ru) echo "Неизвестный параметр patch_opts у патч файла '$2'";;
-uk) echo "Невідомий параметр patch_opts у патч файлі '$2'";;
-*) echo "Invalid patch_opts paramert at patch file '$2'";;
+ru) echo -e "Неизвестный параметр patch_opts у патч файла '$2'";;
+uk) echo -e "Невідомий параметр patch_opts у патч файлі '$2'";;
+*) echo -e "Invalid patch_opts paramert at patch file '$2'";;
 esac;;
 
 ##########
 LATIN_ONLY*)##############################################################i
 ############
 case $lang in
-ru) echo "В $2 пакетe разрешено использовать только латинские буквы. Ошибка в символе $3";;
-uk) echo "У $2 пакеті дозволено використовувати тільки латинські літери. Помилка в символі $3";;
-*) echo "Only latin letters are allowed in $2 package description .Error in letter number $3";;
+ru) echo -e "В $2 пакетe разрешено использовать только латинские буквы. Ошибка в символе $3";;
+uk) echo -e "У $2 пакеті дозволено використовувати тільки латинські літери. Помилка в символі $3";;
+*) echo -e "Only latin letters are allowed in $2 package description .Error in letter number $3";;
 esac;;
 
 ##########
 WRITING_TO*)##############################################################i
 ############
 case $lang in
-ru) echo "Файл будет записан в директорию $2";;
-uk) echo "Файл буде записаний в директорію $2";;
-*) echo "File will be written in $2";;
+ru) echo -e "Файл будет записан в директорию $2";;
+uk) echo -e "Файл буде записаний в директорію $2";;
+*) echo -e "File will be written in $2";;
 esac;;
 
 ##########
 CANT_INCREMENT_BUILD*)###################################################
 ############
 case $lang in
-ru) echo "Невозможно увеличить номер билда $2";;
-uk) echo "Неможливо збільшити номер білду $2";;
-*) echo "Can't increment build number $2";;
+ru) echo -e "Невозможно увеличить номер билда $2";;
+uk) echo -e "Неможливо збільшити номер білду $2";;
+*) echo -e "Can't increment build number $2";;
 esac;;
 
 ##########
 OVERWRITE_FILE*)###################################################
 ############
 case $lang in
-ru) echo "Перезаписать файл $2";;
-uk) echo "Перезаписати файл $2";;
-*) echo "Overwrite the file $2";;
+ru) echo -e "Перезаписать файл $2";;
+uk) echo -e "Перезаписати файл $2";;
+*) echo -e "Overwrite the file $2";;
 esac;;
 
 ##########
 INCORRECT_ARCH_PACKAGE*)###################################################
 ############
 case $lang in
-ru) echo "Неверная архитектура $2 пакета $3";;
-uk) echo "Невірна архітектура $2 пакету $3";;
-*) echo "Incorrect architecture $2 of the package $3";;
+ru) echo -e "Неверная архитектура $2 пакета $3";;
+uk) echo -e "Невірна архітектура $2 пакету $3";;
+*) echo -e "Incorrect architecture $2 of the package $3";;
 esac;;
 
 ##########
 MOVING*)###################################################
 ############
 case $lang in
-ru) echo "Перемещение $2";;
-uk) echo "Переміщення $2";;
-*) echo "Moving $2";;
+ru) echo -e "Перемещение $2";;
+uk) echo -e "Переміщення $2";;
+*) echo -e "Moving $2";;
 esac;;
 
 ##########
 REPLACING_TAGS*)###################################################
 ############
 case $lang in
-ru) echo "Замена тегов";;
-uk) echo "Заміна тегів";;
-*) echo "Replacing tags";;
+ru) echo -e "Замена тегов";;
+uk) echo -e "Заміна тегів";;
+*) echo -e "Replacing tags";;
 esac;;
 
 ##########
 PACKING_BACK*)###################################################
 ############
 case $lang in
-ru) echo "Упаковка назад";;
-uk) echo "Упаковка назад";;
-*) echo " Packing back";;
+ru) echo -e "Упаковка пакета обратно";;
+uk) echo -e "Упаковка пакету назад";;
+*) echo -e "Packing package back";;
 esac;;
 
 ##########
 MODIFYING_DEPS*)###################################################
 ############
 case $lang in
-ru) echo "Модификация зависимостей";;
-uk) echo "Модифікація залежностей";;
-*) echo "Modifying dependence";;
+ru) echo -e "Модификация зависимостей";;
+uk) echo -e "Модифікація залежностей";;
+*) echo -e "Modifying dependence";;
 esac;;
 
 ##########
 MODIFYING_METADATA*)###################################################
 ############
 case $lang in
-ru) echo "Модификация метаданных";;
-uk) echo "Модифікація метаданих";;
-*) echo "Modifying metadata";;
+ru) echo -e "Модификация метаданных";;
+uk) echo -e "Модифікація метаданих";;
+*) echo -e "Modifying metadata";;
+esac;;
+
+##########
+ERROR_PACKAGE_NO_LIBS*)###################################################
+############
+case $lang in
+ru) echo -e "\e[31mОШИБКА:\e[0m пакет не имеет \e[1;33mlibs\e[0m и будет пустым. Прерывание выполнения";;
+uk) echo -e "\e[31mПОМИЛКА:\e[0m пакет не має \e[1;33mlibs\e[0m і буде порожнім. Переривання виконання";;
+*) echo -e "\e[31mERROR:\e[0m package has no \e[1;33mlibs\e[0m, output will be empty. Aborting build";;
+esac;;
+
+##########
+DELETE_TEMPORARY_FILES*)###################################################
+############
+case $lang in
+ru) echo -e "Удаление временных файлов";;
+uk) echo -e "Видалення тимчасових файлів";;
+*) echo -e "Delete temporary files";;
+esac;;
+
+##########
+FOUND_PACKAGE_DIR*)###################################################
+############
+case $lang in
+ru) echo -e "Найден пакет $2 в каталоге $3";;
+uk) echo -e "Знайдений пакет $2 у каталозі $3";;
+*) echo -e "Found a package $2 in the directories $3";;
+esac;;
+
+##########
+CHECKING_PACKAGE_DEPS*)###################################################
+############
+case $lang in
+ru) echo -e "Проверка зависимостей пакета \e[1;32m$2\e[0m";;
+uk) echo -e "Перевірка залежностей пакета \e[1;32m$2\e[0m";;
+*) echo -e "Checking package dependencies \e[1;32m$2\e[0m";;
+esac;;
+
+##########
+COULD_NOT_FIND_PACKAGE*)###################################################
+############
+case $lang in
+ru) echo -e "Не удалось найти пакет \e[1;31m$2\e[0m";;
+uk) echo -e "Не вдалося знайти пакет \e[1;31m$2\e[0m";;
+*) echo -e "Could not find package \e[1;31m$2\e[0m";;
+esac;;
+
+##########
+FAILED_TO_CREATE_DIR*)###################################################
+############
+case $lang in
+ru) echo -e "Не удалось создать каталог \e[31m$2\e[0m";;
+uk) echo -e "Не вдалося створити каталог \e[31m$2\e[0m";;
+*) echo -e "Failed to create directory \e[31m$2\e[0m";;
+esac;;
+
+##########
+NOT_ADDED_PACKAGE_DEPS*)###################################################
+############
+case $lang in
+ru) echo -e "Не добавлен пакет в зависимости \e[1;31m$2\e[0m";;
+uk) echo -e "Не доданий пакет до залежностей \e[1;31m$2\e[0m";;
+*) echo -e "Not added package dependencies \e[1;31m$2\e[0m";;
 esac;;
 
 ######################end
 *)
-echo "Unknown string $1"; exit 1
+echo -e "Unknown string $1"; exit 1
 ;;
 esac
 }

@@ -16,10 +16,10 @@ MKPKG_INSTALL_PREFIX=/usr
 MKPKG_DIR=${MKPKG_INSTALL_PREFIX}"/share/mpkg/mkpkg"
 export MKPKG_DIR
 
-if [ -f "${MKPKG_DIR}/mkpkg_shared_functions" ]; then 
+if [ -f "${MKPKG_DIR}/mkpkg_shared_functions" ]; then
 	. "${MKPKG_DIR}/mkpkg_shared_functions"
 else
-	echo "Error loading shared functions block"
+	echo "Error loading shared functions block ${MKPKG_DIR}/mkpkg_shared_functions"
 	exit 1
 fi
 n_echo MKPKG_START ${MKPKG_VER}

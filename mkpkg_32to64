@@ -9,7 +9,7 @@ mpkg_cache_dir="/var/mpkg/cache"
 if [ -f "${MKPKG_DIR}/mkpkg_shared_functions" ]; then
    . "${MKPKG_DIR}/mkpkg_shared_functions"
 else
-   echo "Error loading shared functions block"
+   echo "Error loading shared functions block ${MKPKG_DIR}/mkpkg_shared_functions"
    exit 1
 fi
 
@@ -35,7 +35,7 @@ make_compat32() {
   set -e
   local pkg_file=$1
   if ! [ -f "${pkg_file}" ]; then
-     echo "File not found ${pkg_file}"
+     show_message FILE_NOT_FOUND "${pkg_file}"
      exit 1
   fi
   PKG_FULLPATH="$(readlink -f ${pkg_file})"
@@ -74,7 +74,7 @@ make_compat32() {
         copied_once=1
     done
     if [ "${copied_once}" == "0" ] ; then
-       echo "ERROR: package has no libs, output will be empty. Aborting build"
+        show_message ERROR_PACKAGE_NO_LIBS
        exit 1
     fi
   )
@@ -97,8 +97,8 @@ make_compat32() {
   show_message PACKING_BACK
   # Package it and move to packages directory
   ( cd ${dest_dir} ; buildpkg ${package_out_dir}/ )
+  show_message DELETE_TEMPORARY_FILES
   rm -fr "${wd}"
-  echo "Delete temporary files"
   set +e
 }
 
@@ -159,7 +159,7 @@ find_package_directory() {
 }
 
 check_deps() {
-  echo "Checking dependency «${newdep_name}»"
+  show_message CHECKING_PACKAGE_DEPS "«${newdep_name}»"
   local dep_ver=$(echo ${newdep_tail} | sed 's/^[>=<]*//g')
   local find_package=""
   find_package_directory find_package ${package_out_dir} "i686"
@@ -172,23 +172,23 @@ check_deps() {
            wget --no-check-certificate -P ${package_out_dir}/deps "http://api.agilialinux.ru/pkg/${newdep_name}/i686/${dep_ver}"
            find_package_directory find_package ${package_out_dir}/deps
         else
-           echo "Found a package ${find_package} in the directories ${package_out_dir}"
+           show_message FOUND_PACKAGE_DIR "${find_package}" "${package_out_dir}"
         fi
      else
-        echo "Found a package ${find_package} in the directories ${mpkg_cache_dir}"
+        show_message FOUND_PACKAGE_DIR "${find_package}" "${mpkg_cache_dir}"
      fi
 
   else
-     echo "Found a package ${find_package} in the directories ${package_out_dir}"
+    show_message FOUND_PACKAGE_DIR "${find_package}" "${package_out_dir}"
   fi
   if [ -z ${find_package} ]; then
-     echo "Could not find package ${newdep_name}"
+     show_message COULD_NOT_FIND_PACKAGE "«${newdep_name}»"
      #Когда баги с зависимостями исправятся нужно убрать
      local name_lib=`echo "${newdep_name}" | sed 's/\(.\{1,3\}\).*/\1/'`
      if [ "${name_lib}" != "lib" ]; then
         exit 1
      else
-       echo "Add because the first three characters lib"
+       echo -e "\e[31mAdd because the first three characters lib\e[0m"
        return 0
      fi
   fi
@@ -196,7 +196,7 @@ check_deps() {
   local deps_dir="${wd}/deps/${newdep_name}-${dep_ver}"
   mkdir -p "${deps_dir}"
   if ! [ -d "${deps_dir}" ]; then
-     echo "Failed to create directory ${deps_dir}"
+     show_message FAILED_TO_CREATE_DIR "${deps_dir}"
      exit 1
   fi
   cd "${deps_dir}"
@@ -220,7 +220,7 @@ modify_deps() {
       set +e
       check_deps
       if [ $? = 1 ]; then
-         echo "Not added a package «${newdep_name}»"
+         show_message NOT_ADDED_PACKAGE_DEPS "«${newdep_name}»"
          continue
       fi
       set -e
