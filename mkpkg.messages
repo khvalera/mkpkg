@@ -824,9 +824,9 @@ esac;;
 ERROR_PACKAGE_NO_LIBS*)###################################################
 ############
 case $lang in
-ru) echo -e "\e[31mОШИБКА:\e[0m пакет не имеет \e[1;33mlibs\e[0m и будет пустым. Прерывание выполнения";;
-uk) echo -e "\e[31mПОМИЛКА:\e[0m пакет не має \e[1;33mlibs\e[0m і буде порожнім. Переривання виконання";;
-*) echo -e "\e[31mERROR:\e[0m package has no \e[1;33mlibs\e[0m, output will be empty. Aborting build";;
+ru) echo -e "\e[31mОШИБКА:\e[0m пакет не имеет \e[1;33mlibs\e[0m и будет пустым. Сборка прервана!";;
+uk) echo -e "\e[31mПОМИЛКА:\e[0m пакет не має \e[1;33mlibs\e[0m і буде порожнім. Збірка перервана!";;
+*) echo -e "\e[31mERROR:\e[0m package has no \e[1;33mlibs\e[0m, output will be empty. Aborting build!";;
 esac;;
 
 ##########
@@ -881,6 +881,15 @@ case $lang in
 ru) echo -e "Не добавлен пакет в зависимости \e[1;31m$2\e[0m";;
 uk) echo -e "Не доданий пакет до залежностей \e[1;31m$2\e[0m";;
 *) echo -e "Not added package dependencies \e[1;31m$2\e[0m";;
+esac;;
+
+##########
+TAG_LIST_FILE_NOT_FOUND*)###################################################
+############
+case $lang in
+ru) echo -e "Файл с списком тегов не найден $2";;
+uk) echo -e "Файл із списком тегів не знайдено $2";;
+*) echo -e "Tag list file not found $2";;
 esac;;
 
 ######################end

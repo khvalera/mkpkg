@@ -1,6 +1,11 @@
 #!/bin/bash
 # This script converts i686 package to x86_64 compat32 package by stripping unneeded files
 
+if [ -z "${MKPKG_DIR}" ]; then
+   echo "The script starts mkpkg -c64 [package]"
+   exit
+fi
+
 mpkg_cache_dir="/var/mpkg/cache"
 
 # Load global configuration

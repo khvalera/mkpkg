@@ -17,17 +17,19 @@ MKPKG_DIR=${MKPKG_INSTALL_PREFIX}"/share/mpkg/mkpkg"
 export MKPKG_DIR
 
 if [ -f "${MKPKG_DIR}/mkpkg_shared_functions" ]; then
-	. "${MKPKG_DIR}/mkpkg_shared_functions"
+   . "${MKPKG_DIR}/mkpkg_shared_functions"
 else
-	echo "Error loading shared functions block ${MKPKG_DIR}/mkpkg_shared_functions"
-	exit 1
+   echo "Error loading shared functions block ${MKPKG_DIR}/mkpkg_shared_functions"
+   exit 1
 fi
+
 n_echo MKPKG_START ${MKPKG_VER}
 
 if [ ! -f "${MKPKG_DIR}/taglist" ]; then
-	echo "Tag list file not found  ('${MKPKG_DIR}/taglist')"
-	exit 1
+    show_message TAG_LIST_FILE_NOT_FOUND "${MKPKG_DIR}/taglist"
+    exit 1
 fi
+
 #enable debug in your config if you need it.
 #MKPKG_DEBUG="ON"
 
@@ -165,7 +167,7 @@ check_remote_dirs() {
 	if [ "${bad}" == "1" ]; then
 		exit 1
 	fi
-}   
+}
 
 #command line options parser
 set_options(){
@@ -177,8 +179,8 @@ set_options(){
 	else
 		srcache="${startdir}"
 	fi
-while [ ! -z "$1" ]; do 
-	case $1 in 
+while [ ! -z "$1" ]; do
+	case $1 in
 		-nc|--no-cleanup)
 			NOT_CLEAR_SOURCE=1
 			;;
@@ -342,34 +344,34 @@ copy_abuild() {
 	if [ "${PWD_NOT_WRITABLE}" != "1" ]; then 
 		local _me=$(echo ${me} | sed "s,@, at ,")
 		sed "${MKPKG_DIR}/ABUILD" -e "s,%%%MAINTAINER%%%,${mn}," \
-			-e "s,%%%EMAIL%%%,${_me}," >"$startdir/ABUILD"
+			-e "s,%%%EMAIL%%%,${_me}," >"${startdir}/ABUILD"
 		case $1 in
 			cmake)
-				cat "${MKPKG_DIR}"/mkpkg_templates/cmake >> "$startdir/ABUILD"
+				cat "${MKPKG_DIR}"/mkpkg_templates/cmake >> "${startdir}/ABUILD"
 				;;
 			python)
-				cat "${MKPKG_DIR}"/mkpkg_templates/python >> "$startdir/ABUILD"
+				cat "${MKPKG_DIR}"/mkpkg_templates/python >> "${startdir}/ABUILD"
 				;;
 			perl)
-				cat "${MKPKG_DIR}"/mkpkg_templates/perl >> "$startdir/ABUILD"
+				cat "${MKPKG_DIR}"/mkpkg_templates/perl >> "${startdir}/ABUILD"
 				;;
 			c)
-				cat "${MKPKG_DIR}"/mkpkg_templates/c >> "$startdir/ABUILD" 
+				cat "${MKPKG_DIR}"/mkpkg_templates/c >> "${startdir}/ABUILD" 
 				;;
 			qmake)
-				cat "${MKPKG_DIR}"/mkpkg_templates/qmake >> "$startdir/ABUILD"
+				cat "${MKPKG_DIR}"/mkpkg_templates/qmake >> "${startdir}/ABUILD"
 				;;
 			waf)
-				cat "${MKPKG_DIR}"/mkpkg_templates/waf >> "$startdir/ABUILD"
+				cat "${MKPKG_DIR}"/mkpkg_templates/waf >> "${startdir}/ABUILD"
 				;;
 			scons)
-				cat "${MKPKG_DIR}"/mkpkg_templates/scons >> "$startdir/ABUILD"
+				cat "${MKPKG_DIR}"/mkpkg_templates/scons >> "${startdir}/ABUILD"
 				;;
 			*)
-				cat "${MKPKG_DIR}"/mkpkg_templates/autotools >> "$startdir/ABUILD"
+				cat "${MKPKG_DIR}"/mkpkg_templates/autotools >> "${startdir}/ABUILD"
 				;;
 		esac
-		cat "${MKPKG_DIR}"/mkpkg_templates/footer >> "$startdir/ABUILD"
+		cat "${MKPKG_DIR}"/mkpkg_templates/footer >> "${startdir}/ABUILD"
 	else
 		show_message PWD_NOT_WRITABLE
 	fi
@@ -609,6 +611,7 @@ bumper() {
 		sed -i "0,/^pkgbuild=.*/s/^pkgbuild=.*/pkgbuild=$BUMP_BUILD/" "${abuild_path}"/ABUILD || exit 1
 	fi
 }
+
 #check if abuild exists and get basic package attrs
 get_pkg_name() {
 	check_mopsbuild "$(pwd)"
@@ -635,17 +638,15 @@ check_deprecated_vars() {
 	fi
 
 	#check for "$startdir/pkg" and its variants presence in ABUILD.
-	if [ -n "$(cat "${abuild_path}"/ABUILD | grep '$startdir/pkg')" -o -n "$(cat "${abuild_path}"/ABUILD | grep '${startdir}/pkg')" ]; then
+	if [ -n "$(cat "${abuild_path}"/ABUILD | grep '${startdir}/pkg')" -o -n "$(cat "${abuild_path}"/ABUILD | grep '${startdir}/pkg')" ]; then
 		show_message ERR_STARTDIR_PKG
 		exit 1
 	fi
 	#same shit with $startdir/src
-	if [  "$(cat "${abuild_path}"/ABUILD | grep '$startdir/src')" -o "$(cat "${abuild_path}"/ABUILD | grep '${startdir}/src')" ]; then
+	if [  "$(cat "${abuild_path}"/ABUILD | grep '${startdir}/src')" -o "$(cat "${abuild_path}"/ABUILD | grep '${startdir}/src')" ]; then
 		show_message ERR_STARTDIR_SRC
 		exit 1
 	fi
-
-
 }
 
 #########################
@@ -664,8 +665,6 @@ check_abuild() {
 	if [ "$(check_var_set main_vars)" == "1" ]; then 
 		exit 1
 	fi
-
-
 
 #check for description presence
 	local desc_vars="shortdesc longdesc"
@@ -865,20 +864,19 @@ check_tags() {
 	local short=0
 	local bad=0
 	local tag_num=0
-	for tag in $tags; do
-		d_echo "	check $tag"
-		if [ ! "$(grep -w ^$tag$ "${MKPKG_DIR}"/taglist)" ]; then
+	for tag in ${tags}; do
+		d_echo "	check ${tag}"
+		if [ ! "$(grep -w ^${tag}$ "${MKPKG_DIR}"/taglist)" ]; then
 			show_message UNKNOWN_TAG $tag
 			bad=1
 		fi
-		
-		local tire=`echo "$tag" | sed -n "/.-./p"`
-		if [ ! "$tire" = "" ]; then
+		local tire=`echo "${tag}" | sed -n "/.-./p"`
+		if [ ! "${tire}" = "" ]; then
 			((long++))
 		else
 			((short++))
 		fi
-		if [ "${tag}" != "x86" -a "${tag}" != "proprietary" ]; then
+		if [ "${tag}" != "x86" -a "${tag}" != "proprietary" -a "${tag}" != "compat32" ]; then
 			((tag_num++))
 		fi
 	done
@@ -1026,11 +1024,34 @@ if [ "${build_status}" != "0" ]; then
 	exit 1
 fi
 
+if [ "${ARCH}" = "i686" ]; then
+  . "${startdir}"/ABUILD
+  temp_arch="${arch}"
+  main_pkgname="${pkgname}"
+  [ "${temp_arch}"="auto" ] && temp_arch="${ARCH}"
+  if [ -n "$(echo ${tags} | grep -w 'compat32')" ]; then
+     temp_pkg=`grep "${pkgname}-${pkgver}-${temp_arch}-${pkgbuild}.txz" "${startdir}"/install_list.${main_pkgname}`
+     echo "Start script converts package ${temp_pkg} to x86_64 compat32 package"
+     `/usr/bin/mkpkg_32to64 "${temp_pkg}"`
+  fi
+  for pkg in ${pkglist}; do
+      ${pkg}
+      if [ -n "$(echo ${tags} | grep -w 'compat32')" ]; then
+         [ "${temp_arch}"="auto" ] && temp_arch="${ARCH}"
+         temp_pkg=`grep "${pkgname}-${pkgver}-${temp_arch}-${pkgbuild}.txz" "${startdir}"/install_list.${main_pkgname}`
+         echo "Start script converts package ${temp_pkg} to x86_64 compat32 package"
+         set -x
+         `mkpkg_32to64 "${temp_pkg}"`
+      fi
+  done
+  . "${startdir}"/ABUILD
+fi
+
 if [ "${INSTALL}" == "1" ]; then
-	for ipkg in $(cat "${startdir}"/install_list.${pkgname}); do
-		ipkglist+="${ipkg} "
-	done
-	mpkg -y install ${ipkglist}
+   for ipkg in $(cat "${startdir}"/install_list.${pkgname}); do
+       ipkglist+="${ipkg} "
+   done
+   mpkg -y install ${ipkglist}
 fi
 
 del_work_dir
