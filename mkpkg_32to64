@@ -53,8 +53,7 @@ make_compat32() {
   rm -rf "${wd}"
   mkdir -p "${orig_dir}"
   mkdir -p "${dest_dir}"
-  ( cd ${orig_dir} ; tar -xf "${PKG_FULLPATH}" )
-
+  ( cd "${orig_dir}" ; tar -xf "${PKG_FULLPATH}" )
   # Copy metadata
   mkdir ${dest_dir}/install
   cp ${orig_dir}/install/data.xml ${dest_dir}/install/data.xml
@@ -87,7 +86,20 @@ make_compat32() {
   # Copy ABUILD
   orig_abuild=$(basename ${orig_dir}/usr/src/BuildTrees/${pkgname}-*.build_tree.tar.xz)
   dest_abuild=$(echo ${orig_abuild} | sed s/${pkgname}/${pkgname}32/g)
-  install -Dm0644 ${orig_dir}/usr/src/BuildTrees/${orig_abuild} ${dest_dir}/usr/src/BuildTrees/${dest_abuild} || echo "WARNING: No ABUILD in package"
+  if ! [ -f "${orig_dir}/usr/src/BuildTrees/${orig_abuild}" ]; then
+     show_message FILE_NOT_FOUND "${orig_dir}/usr/src/BuildTrees/${orig_abuild}"
+     #echo "WARNING: No ABUILD in package"
+     exit 1
+  fi
+  install -Dm0644 "${orig_dir}/usr/src/BuildTrees/${orig_abuild}" "${dest_dir}/usr/src/BuildTrees/${dest_abuild}"
+
+  # Check ABUILD
+  mkdir -p "${wd}/build_tree"
+  ( cd "${wd}/build_tree" ; tar -xf "${orig_dir}/usr/src/BuildTrees/${pkgname}-${pkgver}.build_tree.tar.xz" )
+  . "${wd}/build_tree/ABUILD"
+  if [ -z "$(echo ${tags} | grep -w 'compat32')" ]; then
+      show_message ABUILD_NOT_TAG «compat32»
+  fi
 
   # Do data.xml magic
   show_message REPLACING_TAGS
@@ -164,25 +176,25 @@ find_package_directory() {
 }
 
 check_deps() {
+  IP="api.agilialinux.ru"
   show_message CHECKING_PACKAGE_DEPS "«${newdep_name}»"
   local dep_ver=$(echo ${newdep_tail} | sed 's/^[>=<]*//g')
   local find_package=""
   find_package_directory find_package ${package_out_dir} "i686"
   if [ -z "${find_package}" ]; then
      find_package_directory find_package ${mpkg_cache_dir} "i686"
-     if [ -z ${find_package} ]; then
-        #Когда api будет закачивать всегда нужную архитектуру нужно убрать
-        find_package_directory find_package ${package_out_dir}
-        if [ -z "${find_package}" ]; then
-           wget --no-check-certificate -P ${package_out_dir}/deps "http://api.agilialinux.ru/pkg/${newdep_name}/i686/${dep_ver}"
-           find_package_directory find_package ${package_out_dir}/deps
-        else
-           show_message FOUND_PACKAGE_DIR "${find_package}" "${package_out_dir}"
+     if [ -z "${find_package}" ]; then
+        ping_res=1
+        /bin/ping ${IP} -c 2 > /dev/null 2>&1 && ping_res=0
+        if [ ${ping_res} -ne 0 ]; then
+           show_message UNABLE_CONNECT_SERVER "${IP}"
+           exit 1
         fi
+        wget --no-check-certificate -P ${package_out_dir}/deps "http://${IP}/pkg/${newdep_name}/i686/${dep_ver}"
+        find_package_directory find_package ${package_out_dir}/deps
      else
-        show_message FOUND_PACKAGE_DIR "${find_package}" "${mpkg_cache_dir}"
+        show_message FOUND_PACKAGE_DIR "${find_package}" "${package_out_dir}"
      fi
-
   else
     show_message FOUND_PACKAGE_DIR "${find_package}" "${package_out_dir}"
   fi

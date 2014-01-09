@@ -892,6 +892,42 @@ uk) echo -e "Файл із списком тегів не знайдено $2";;
 *) echo -e "Tag list file not found $2";;
 esac;;
 
+##########
+ABUILD_NOT_TAG*)###################################################
+############
+case $lang in
+ru) echo -e "В ABUILD не указан тег \e[1;31m$2\e[0m!!!";;
+uk) echo -e "У ABUILD не вказано тег \e[1;31m$2\e[0m!!!";;
+*) echo -e "In ABUILD not specified tag \e[1;31m$2\e[0m!!!";;
+esac;;
+
+##########
+EXECUTION_OF_FUNCTIONS*)###################################################
+############
+case $lang in
+ru) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Выполнение функций : \e[34m$2\e[0m\e[0m";;
+uk) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Выполнение функций : \e[34m$2\e[0m\e[0m";;
+*) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Execution of functions : \e[34m$2\e[0m\e[0m\e[0m";;
+esac;;
+
+##########
+END_FUNCTION*)###################################################
+############
+case $lang in
+ru) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Конец функции      : \e[34m$2\e[0m\e[0m";;
+uk) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Кінець функції     : \e[34m$2\e[0m\e[0m";;
+*) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== End function         : \e[34m$2\e[0m\e[0m";;
+esac;;
+
+##########
+UNABLE_CONNECT_SERVER*)###################################################
+############
+case $lang in
+ru) echo -e "\e[31mНе удается подключиться к серверу: $2\e[0m";;
+uk) echo -e "\e[31mНе вдається підключитися до сервера: $2\e[0m";;
+*) echo -e "\e[31mUnable to connect to server: $2\e[0m";;
+esac;;
+
 ######################end
 *)
 echo -e "Unknown string $1"; exit 1
