@@ -1,28 +1,11 @@
 d_echo() {
-  if [ "${MKPKG_DEBUG}" == "ON" ]; then
-     echo -e "\e[41m===[MKPKG_DEBUG]=== : $1\e[0m"
+  if [ "${MKPKG_DEBUG}" == "ON" ]; then 
+     echo -e "\e[42m===[MKPKG_DEBUG]=== : $1\e[0m"
   fi
 }
 
-#Query function
-ask_yn() {
-  local pressed_key
-  if [ -n "$1" ] ; then
-     message_text=`show_message $1`
-     read -n 1 -p "${message_text} (y/[a]): " pressed_key
-   else
-      read -n 1 pressed_key
-   fi
-   echo "" 1>&2
-   if [ "${pressed_key}" = "y" ] ; then
-      return 0
-    else
-      return 1
-   fi
-}
-
 #Loading message file
-if [ -f "${MKPKG_DIR}/mkpkg.messages" ]; then
+if [ -f "${MKPKG_DIR}/mkpkg.messages" ]; then 
    . "${MKPKG_DIR}/mkpkg.messages"
 else
    echo "Error loading mkpkg.messages file from '${MKPKG_DIR}' !"
@@ -36,4 +19,3 @@ else
    echo "Error loading mkpkg.n_messages file from '${MKPKG_DIR}' !"
    exit 1
 fi
-

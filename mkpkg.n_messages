@@ -9,7 +9,6 @@ ru) mmsg "Запускается mkpkg версия $2";;
 *) mmsg "Starting mkpkg version $2";;
 esac;;
 
-
 *) echo "Unknown string $1"; exit 1
 ;;
 esac

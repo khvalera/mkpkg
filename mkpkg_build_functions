@@ -7,7 +7,7 @@ p_pkgname=${pkgname}
 p_pkgver=${pkgver}
 p_adddep="${adddep}"
 p_arch=${arch}
-p_pkgdir="$startdir/${pkgname}"
+p_pkgdir="${startdir}/${pkgname}"
 p_shortdesc="${shortdesc}"
 if [ -n "${longdesc}" ]; then
 	p_longdesc=("$longdesc")
@@ -83,7 +83,6 @@ get_extract_source() {
 					;;
 				git)
 					cd "${srcache}"
-
 					if [ ! ${ext_arg} ];then 
 						item=$(echo "$item" | sed 's/^git:*//')
 						if [ ! -d "${pkgname}_git_${loc_source}.src" ]; then
@@ -643,8 +642,22 @@ create_package() {
 		fi
 	fi
 	mpkg-setmeta "${pkgdir}" $DELDEP
+	# Add deps without duplication
+	local pkg_deps="$(mkpkg_xml_parser ${pkgdir}/install/data.xml -d)"
+	for dep in ${pkg_deps// / }; do
+		dep_name_str+="$(echo ${dep} | sed 's/[>=<!].*//g') "
+	done
+	ADDDEP=""
+	if [ -n "${adddep}" ]; then
+		for dep in ${adddep// / }; do
+			local find_deps=`echo "${dep_name_str}" | grep -w "$(echo ${dep} | sed 's/[>=<!].*//g')"`
+			if [ -z "${find_deps}" ]; then
+				ADDDEP+="--add-dep=${dep} "
+			fi
+		done
+	fi
 	mpkg-setmeta "${pkgdir}" $ADDDEP
-
+	
 	# Configuration files import
 	if [ -n "${config_files}" ] ; then
 		local config_files_file="${startdir}/config_files-${RANDOM}"
@@ -682,9 +695,6 @@ create_package() {
 
 gen_meta_options(){
 	META_OPTIONS="--keep-symlinks --name=${pkgname} --version=${pkgver//-/_} --arch=${ARCH} --build=${pkgbuild//-/_} "
-
-	DELDEP=""
-	ADDDEP=""
 	for tag in ${tags// / } ;do
 		META_OPTIONS+="--add-tag=$tag "
 	done
@@ -699,21 +709,15 @@ gen_meta_options(){
 	if [ -n "${conflicts}" ]; then
 		META_OPTIONS+="--conflicts=${conflicts} "
 	fi
-
 	META_OPTIONS+="--maintainer-name=${mn} --maintainer-email=${me} "
 
+	DELDEP=""
 	if [ -n "$removedep" ]; then
 		for rd in ${removedep// / } ; do
 			DELDEP+="--remove-dep=$rd "
 		done
 	fi
 	DELDEP+=" --remove-dep=fakeroot "
-
-	if [ -n "${adddep}" ]; then
-		for dep in ${adddep// / } ;do
-			ADDDEP+="--add-dep=$dep "
-		done
-	fi
 }
 
 make_build_tree() {
@@ -727,7 +731,7 @@ make_build_tree() {
 		mkdir -p "${startdir}/files"
 		cp -a "${pkgdir}"/install/data.xml "$startdir"/files/data.xml || exit 1
 		if [ "${APPEND_DEPS}" == 1 ]; then
-			local _pkgdeps=$(python "${MKPKG_DIR}"/mkpkg_xml_parser.py "${pkgdir}"/install/data.xml -d)
+			local _pkgdeps="$(mkpkg_xml_parser ${pkgdir}/install/data.xml -d)"
 			appenddeps "${_pkgdeps}"
 		fi
 		tar Jcf "${pkgdir}/usr/src/BuildTrees/${pkgname}-${pkgver//-/_}.build_tree.tar.xz" --ignore-failed-read \

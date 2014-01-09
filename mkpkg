@@ -16,18 +16,20 @@ MKPKG_INSTALL_PREFIX=/usr
 MKPKG_DIR=${MKPKG_INSTALL_PREFIX}"/share/mpkg/mkpkg"
 export MKPKG_DIR
 
-if [ -f "${MKPKG_DIR}/mkpkg_shared_functions" ]; then 
-	. "${MKPKG_DIR}/mkpkg_shared_functions"
+if [ -f "${MKPKG_DIR}/mkpkg_shared_functions" ]; then
+   . "${MKPKG_DIR}/mkpkg_shared_functions"
 else
-	echo "Error loading shared functions block"
-	exit 1
+   echo "Error loading shared functions block ${MKPKG_DIR}/mkpkg_shared_functions"
+   exit 1
 fi
+
 n_echo MKPKG_START ${MKPKG_VER}
 
 if [ ! -f "${MKPKG_DIR}/taglist" ]; then
-	echo "Tag list file not found  ('${MKPKG_DIR}/taglist')"
-	exit 1
+   show_message TAG_LIST_FILE_NOT_FOUND "${MKPKG_DIR}/taglist"
+   exit 1
 fi
+
 #enable debug in your config if you need it.
 #MKPKG_DEBUG="ON"
 
@@ -37,615 +39,619 @@ fi
 
 #check mode for bt_working dir
 wdm_check() {
-	d_echo "wdm_ckeck()"
-	case ${work_dir_mode} in
-		remote) 
-			USE_REMOTE=1
-			check_remote_dirs
-			;;
-		auto)
-			check_remote_dirs
-			;;
-		cwd) 
-			USE_REMOTE=0
-			src_cache_dir="$(pwd)"
-			;;
-		*)
-		       	show_message BAD_REMOTE_DIR ${work_dir_mode}
-			exit 1
-			;;
-	esac
-	d_echo "wdm_check() end"
+  show_message EXECUTION_OF_FUNCTIONS "wdm_ckeck()"
+  case ${work_dir_mode} in
+       remote)
+             USE_REMOTE=1
+             check_remote_dirs
+             ;;
+       auto)
+             check_remote_dirs
+             ;;
+       cwd)
+             USE_REMOTE=0
+             src_cache_dir="$(pwd)"
+             ;;
+       *)
+             show_message BAD_REMOTE_DIR ${work_dir_mode}
+             exit 1
+             ;;
+  esac
+      show_message END_FUNCTION "wdm_check()"
 }
 
 not_root() {
 if ! [ "${FORCE_ROOT}" = "1" ]; then 
-	if [ `whoami` = "root" ]; then
-		show_message NOT_ROOT
-		exit 1
-	fi
+   if [ `whoami` = "root" ]; then
+      show_message NOT_ROOT
+      exit 1
+   fi
 fi
 }
 
 #get maintainer name and email from mpkg
 get_maintainer() {
-	d_echo "get_maintainer()"
-	mn=$(mpkg-maintainer --show | grep 'MaintainerName: ' | cut -d ':' -f2 | cut -b2-)
-	me=$(mpkg-maintainer --show | grep 'MaintainerEmail: ' | cut -d ':' -f2 | cut -b2-)
-	if [ -z "$mn" -o -z "$me" ]; then
-		show_message NO_INFO_IN_XML
-		exit 1
-	fi
-	d_echo "get_maintainer() end"
+  show_message EXECUTION_OF_FUNCTIONS "get_maintainer()"
+  mn=$(mpkg-maintainer --show | grep 'MaintainerName: ' | cut -d ':' -f2 | cut -b2-)
+  me=$(mpkg-maintainer --show | grep 'MaintainerEmail: ' | cut -d ':' -f2 | cut -b2-)
+  if [ -z "$mn" -o -z "$me" ]; then
+     show_message NO_INFO_IN_XML
+     exit 1
+  fi
+  show_message END_FUNCTION "get_maintainer()"
 }
 
 #check config file
 check_config() {
-	local bad=0
-	d_echo "Check config"
-	if [ -f /etc/mkpkg.conf ]; then
-		. /etc/mkpkg.conf
-		if [ -f ~/.config/mkpkg.conf ]; then 
-			. ~/.config/mkpkg.conf
-	        fi
-		bt_working_dir+=.$(whoami)
-		wdm_check
+  show_message EXECUTION_OF_FUNCTIONS "check_config()"
+  local bad=0
+  if [ -f /etc/mkpkg.conf ]; then
+     . /etc/mkpkg.conf
+     if [ -f ~/.config/mkpkg.conf ]; then 
+        . ~/.config/mkpkg.conf
+     fi
+     bt_working_dir+=.$(whoami)
+     wdm_check
 
-		if [ "${use_cache_dir}" == "yes" -a -z "${src_cache_dir}" ]; then
-			show_message CACHE_DIR_NOT_SET
-			bad=1
-		else 
-			if [ ! -d "${src_cache_dir}" ]; then
-				mkdir -p "${src_cache_dir}" || bad=1
-			fi
-		fi
+     if [ "${use_cache_dir}" == "yes" -a -z "${src_cache_dir}" ]; then
+        show_message CACHE_DIR_NOT_SET
+        bad=1
+     else
+        if [ ! -d "${src_cache_dir}" ]; then
+           mkdir -p "${src_cache_dir}" || bad=1
+        fi
+     fi
 
-		if [ ! -w "${src_cache_dir}" ]; then
-			show_message CACHE_DIR_NOT_WRITABLE "${src_cache_dir}"
-			bad=1
-		fi
+     if [ ! -w "${src_cache_dir}" ]; then
+        show_message CACHE_DIR_NOT_WRITABLE "${src_cache_dir}"
+        bad=1
+     fi
 
-		if [ -n "${BUILD_FARM_ARCH}" ]; then
-			case ${BUILD_FARM_ARCH} in
-				i386|i486|i586|i686|x86_64)
-					;;
-			*)
-					show_message BAD_FARM_ARCH ${BUILF_FARM_ARCH}
-					bad=1
-					;;
-			esac
-		fi
-		if [ "${interactive}" == "yes" ]; then
-			INTERACTIVE=1
-		fi
-		if [ "${bad}" == "1" ];then
-			exit 1
-		fi
-
-	else
-		show_message NO_CONFIG_FILE
-		exit 1
-	fi
+     if [ -n "${BUILD_FARM_ARCH}" ]; then
+        case ${BUILD_FARM_ARCH} in
+             i386|i486|i586|i686|x86_64)
+               ;;
+             *)
+               show_message BAD_FARM_ARCH ${BUILF_FARM_ARCH}
+               bad=1
+               ;;
+        esac
+     fi
+     if [ "${interactive}" == "yes" ]; then
+        INTERACTIVE=1
+     fi
+     if [ "${bad}" == "1" ];then
+        exit 1
+     fi
+  else
+     show_message NO_CONFIG_FILE
+     exit 1
+  fi
+  show_message END_FUNCTION "check_config()"
 }
 
 #check dir from config file for existance and permissions
 check_remote_dirs() {
-	d_echo "check_remote_dirs()"
-	local bad=0
-	if [ ! -d "${bt_working_dir}" ]; then
-		mkdir -p "${bt_working_dir}" || bad=1
-	fi
+  show_message EXECUTION_OF_FUNCTIONS "check_remote_dirs()"
+  local bad=0
+  if [ ! -d "${bt_working_dir}" ]; then
+     mkdir -p "${bt_working_dir}" || bad=1
+  fi
 
-	if [ "${bad}" == "1" ];then
-		show_message ERROR_MAKING_BT_DIR "${bt_working_dir}"
-	fi
+  if [ "${bad}" == "1" ];then
+     show_message ERROR_MAKING_BT_DIR "${bt_working_dir}"
+  fi
 
-	if [ ! -w "${bt_working_dir}" ]; then
-		bad=1
-		show_message BT_DIR_NOT_WRITABLE "${bt_working_dir}"
-	fi
+  if [ ! -w "${bt_working_dir}" ]; then
+     bad=1
+     show_message BT_DIR_NOT_WRITABLE "${bt_working_dir}"
+  fi
 
-	if [ ! -d "${package_out_dir}" ]; then
-		mkdir -p "${package_out_dir}" || bad=1
-	fi
+  if [ ! -d "${package_out_dir}" ]; then
+     mkdir -p "${package_out_dir}" || bad=1
+  fi
 
-	if [ "${bad}" == "1" ]; then
-		show_message ERROR_MAKING_PACKAGE_DIR_DIR "${package_out_dir}"
-	fi
+  if [ "${bad}" == "1" ]; then
+     show_message ERROR_MAKING_PACKAGE_DIR_DIR "${package_out_dir}"
+  fi
 
-	if [ ! -w "${package_out_dir}" ]; then
-		bad=1
-		show_message PACKAGE_DIR_NOT_WRITABLE "${package_out_dir}"
-	fi
-	
-	if [ ! -w "$(pwd)" ]; then 
-		PWD_NOT_WRITABLE=1
-	fi
+  if [ ! -w "${package_out_dir}" ]; then
+     bad=1
+     show_message PACKAGE_DIR_NOT_WRITABLE "${package_out_dir}"
+  fi
 
-	if [ "${bad}" == "1" ]; then
-		exit 1
-	fi
-}   
+  if [ ! -w "$(pwd)" ]; then 
+     PWD_NOT_WRITABLE=1
+  fi
+
+  if [ "${bad}" == "1" ]; then
+     exit 1
+  fi
+  show_message END_FUNCTION "check_remote_dirs()"
+}
 
 #command line options parser
 set_options(){
-	d_echo "set_options()"
-	startdir="$(pwd)"
-	REAL_CWD="${startdir}"
-	if [ "${use_cache_dir}" == "yes" ]; then
-		srcache="${src_cache_dir}"
-	else
-		srcache="${startdir}"
-	fi
-while [ ! -z "$1" ]; do 
-	case $1 in 
-		-nc|--no-cleanup)
-			NOT_CLEAR_SOURCE=1
-			;;
-		-fr|--force-root)
-			FORCE_ROOT=1
-			;;
-		-ns|--no-strip)
-			NO_STRIP=1
-			;;
-		-nb|--no-build)
-			NOT_BUILD=1
-			;;
-		-c|--copy-abuild) 
-			shift 
-			copy_abuild $1
-			exit 1
-			;;
-		-v|--version)
-			show_message MKPKG_VER
-			exit 1
-			;;
-		-r)
-			RESUME=1
-			;;
-		-h|--help)
-			show_message SHOW_USAGE
-			exit 1
-			;;
-		-bt)
-			shift
-			check_build_tree "$(bt_path $1)"
-			BT_BUILD=1
-			USE_REMOTE=1
-			;;
-		--build-tree=*) 
-			local _file=$(echo "$1" | sed 's/--build-tree=//')
-			check_build_tree $(bt_path ${_file})
-			BT_BUILD=1
-			USE_REMOTE=1
-			;;
-		-bv)
-			shift
-			BUMP_VERSION=$1
-			;;
-		--bump-version=*)
-			local _version=/$(echo "$1" | sed 's/--bump-version=//')
-			BUMP_VERSION=${_version}
-			;;
-		-bb)
-			shift
-			BUMP_BUILD=$1
-			;;
-		--bump-build=*)
-			local _build=$(echo "$1" | sed 's/--bump-build=//')
-			BUMP_BUILD=${_build}
-			;;
-		-ib)
-			INCREASE_BUILD=1
-			;;
-		-si|--sudo-install)
-			INSTALL=1
-			;;
-		-i|--install)
-			if [ "$UID" != 0 ]; then
-				show_message I_M_NOT_ROOT
-			exit 1
-			else
-				INSTALL=1
-			fi
-			;;
-		-ubt*)
-			shift
-			unpack_build_tree_from_pkg "${1}"
-			exit 1
-			;;
-		--unpack-build-tree=*)
-			unpack_build_tree_from_pkg $(echo "${1}" | sed 's/--unpack-build-tree=//')
-			exit 1
-			;;
-		-pod)
-			shift
-			package_out_dir=$(bt_path $1)
-			check_remote_dirs
-			;;
-		-wd)
-			USE_REMOTE=1
-			shift
-			bt_working_dir=$(bt_path $1)
-			check_remote_dirs
-			;;
-		-ccd|--clean-cache-dir)
-			rm -rf "${src_cache_dir}"/*
-			exit 1
-			;;
-		-cpd|--clean-package-dir)
-			rm -rf "${package_out_dir}"/*
-			exit 1
-			;;
-		-wdm)
-			shift
-			case $1 in
-				auto)
-					work_dir_mode=auto
-					;;
-				remote)
-					work_dir_mode=remote
-					;;
-				cwd)
-					work_dir_mode=cwd
-					;;
-				*)
-					show_message BAD_WDM $1
-					exit 1
-					;;
-			esac
-			wdm_check
-			;;
-		-ad|--append-deps)
-			APPEND_DEPS=1
-			;;
-		-c64*)
-			shift
-			fakeroot mkpkg_32to64 $*
-			exit
-			;;
-		-64*)
-			shift
-			fakeroot mkpkg_make64 $*
-			exit
-			;;
-		-sv|--skip-validate)
-			SKIP_VALIDATE=1
-			;;
-		-sgd|--skip-gendeps)
-			SKIP_GENDEPS=1
-			;;
-		-po|--parent-only)
-			PARENT_ONLY=1
-			;;
-		-ba|--builddeps-autoinstall)
-			BUILDDEPS_AUTO_INSTALL=1
-			;;
-		-d|--debug)
-			set -xv
-			NOT_CLEAR_SOURCE=1
-			MKPKG_DEBUG=on
-			;;	
-		*) show_message UNKNOWN_ARG $1
-			exit 1
-			;;
-	esac
-	shift
-done
+  show_message EXECUTION_OF_FUNCTIONS "set_options()"
+  startdir="$(pwd)"
+  REAL_CWD="${startdir}"
+  if [ "${use_cache_dir}" == "yes" ]; then
+     srcache="${src_cache_dir}"
+  else
+     srcache="${startdir}"
+  fi
+  while [ ! -z "$1" ]; do
+        case $1 in
+                 -nc|--no-cleanup)
+                        NOT_CLEAR_SOURCE=1
+                        ;;
+                 -fr|--force-root)
+                        FORCE_ROOT=1
+                        ;;
+                 -ns|--no-strip)
+                        NO_STRIP=1
+                        ;;
+                 -nb|--no-build)
+                        NOT_BUILD=1
+                        ;;
+                 -c|--copy-abuild)
+                        shift
+                        copy_abuild $1
+                        exit 1
+                        ;;
+                 -v|--version)
+                        show_message MKPKG_VER
+                        exit 1
+                        ;;
+                 -r)
+                        RESUME=1
+                        ;;
+                 -h|--help)
+                        show_message SHOW_USAGE
+                        exit 1
+                        ;;
+                 -bt)
+                       shift
+                       check_build_tree "$(bt_path $1)"
+                       BT_BUILD=1
+                       USE_REMOTE=1
+                       ;;
+                 --build-tree=*) 
+                       local _file=$(echo "$1" | sed 's/--build-tree=//')
+                       check_build_tree $(bt_path ${_file})
+                       BT_BUILD=1
+                       USE_REMOTE=1
+                       ;;
+                 -bv)
+                       shift
+                       BUMP_VERSION=$1
+                       ;;
+                 --bump-version=*)
+                       local _version=/$(echo "$1" | sed 's/--bump-version=//')
+                       BUMP_VERSION=${_version}
+                       ;;
+                 -bb)
+                       shift
+                       BUMP_BUILD=$1
+                       ;;
+                 --bump-build=*)
+                       local _build=$(echo "$1" | sed 's/--bump-build=//')
+                       BUMP_BUILD=${_build}
+                       ;;
+                 -ib)
+                       INCREASE_BUILD=1
+                       ;;
+                 -si|--sudo-install)
+                       INSTALL=1
+                       ;;
+                 -i|--install)
+                       if [ "$UID" != 0 ]; then
+                          show_message I_M_NOT_ROOT
+                          exit 1
+                       else
+                          INSTALL=1
+                       fi
+                       ;;
+                -ubt*)
+                       shift
+                       unpack_build_tree_from_pkg "${1}"
+                       exit 1
+                       ;;
+                --unpack-build-tree=*)
+                       unpack_build_tree_from_pkg $(echo "${1}" | sed 's/--unpack-build-tree=//')
+                       exit 1
+                       ;;
+                -pod)
+                       shift
+                       package_out_dir=$(bt_path $1)
+                       check_remote_dirs
+                       ;;
+                -wd)
+                       USE_REMOTE=1
+                       shift
+                       bt_working_dir=$(bt_path $1)
+                       check_remote_dirs
+                       ;;
+                -ccd|--clean-cache-dir)
+                       rm -rf "${src_cache_dir}"/*
+                       exit 1
+                       ;;
+                -cpd|--clean-package-dir)
+                       rm -rf "${package_out_dir}"/*
+                       exit 1
+                       ;;
+                -wdm)
+                       shift
+                       case $1 in
+                               auto)
+                                     work_dir_mode=auto
+                                     ;;
+                               remote)
+                                     work_dir_mode=remote
+                                     ;;
+                               cwd)
+                                     work_dir_mode=cwd
+                                     ;;
+                               *)
+                                     show_message BAD_WDM $1
+                                     exit 1
+                                     ;;
+                      esac
+                          wdm_check
+                          ;;
+                -ad|--append-deps)
+                      APPEND_DEPS=1
+                      ;;
+                -c64*)
+                     shift
+                     fakeroot mkpkg_32to64 $*
+                     exit
+                     ;;
+                -64*)
+                     shift
+                     fakeroot mkpkg_make64 $*
+                     exit
+                     ;;
+                -sv|--skip-validate)
+                     SKIP_VALIDATE=1
+                     ;;
+                -sgd|--skip-gendeps)
+                     SKIP_GENDEPS=1
+                     ;;
+                -po|--parent-only)
+                     PARENT_ONLY=1
+                     ;;
+                -ba|--builddeps-autoinstall)
+                     BUILDDEPS_AUTO_INSTALL=1
+                     ;;
+                -d|--debug)
+                     set -xv
+                     NOT_CLEAR_SOURCE=1
+                     MKPKG_DEBUG=on
+                     ;;
+                *) show_message UNKNOWN_ARG $1
+                     exit 1
+                     ;;
+        esac
+        shift
+  done
+  show_message END_FUNCTION "set_options()"
 }
 
 copy_abuild() {
-	d_echo "copy_abuild()"
-	if [ -f "${startdir}/ABUILD" ]; then
-		ask_yn "OVERWRITE_FILE ${startdir}/ABUILD" || exit 0
-	fi
-	if [ "${PWD_NOT_WRITABLE}" != "1" ]; then 
-		local _me=$(echo ${me} | sed "s,@, at ,")
-		sed "${MKPKG_DIR}/ABUILD" -e "s,%%%MAINTAINER%%%,${mn}," \
-			-e "s,%%%EMAIL%%%,${_me}," >"$startdir/ABUILD"
-		case $1 in
-			cmake)
-				cat "${MKPKG_DIR}"/mkpkg_templates/cmake >> "$startdir/ABUILD"
-				;;
-			python)
-				cat "${MKPKG_DIR}"/mkpkg_templates/python >> "$startdir/ABUILD"
-				;;
-			perl)
-				cat "${MKPKG_DIR}"/mkpkg_templates/perl >> "$startdir/ABUILD"
-				;;
-			c)
-				cat "${MKPKG_DIR}"/mkpkg_templates/c >> "$startdir/ABUILD" 
-				;;
-			qmake)
-				cat "${MKPKG_DIR}"/mkpkg_templates/qmake >> "$startdir/ABUILD"
-				;;
-			waf)
-				cat "${MKPKG_DIR}"/mkpkg_templates/waf >> "$startdir/ABUILD"
-				;;
-			scons)
-				cat "${MKPKG_DIR}"/mkpkg_templates/scons >> "$startdir/ABUILD"
-				;;
-			*)
-				cat "${MKPKG_DIR}"/mkpkg_templates/autotools >> "$startdir/ABUILD"
-				;;
-		esac
-		cat "${MKPKG_DIR}"/mkpkg_templates/footer >> "$startdir/ABUILD"
-	else
-		show_message PWD_NOT_WRITABLE
-	fi
-	exit 1
+  show_message EXECUTION_OF_FUNCTIONS "copy_abuild()"
+  if [ -f "${startdir}/ABUILD" ]; then
+     ask_yn "OVERWRITE_FILE ${startdir}/ABUILD" || exit 0
+  fi
+  if [ "${PWD_NOT_WRITABLE}" != "1" ]; then 
+     local _me=$(echo ${me} | sed "s,@, at ,")
+     sed "${MKPKG_DIR}/ABUILD" -e "s,%%%MAINTAINER%%%,${mn}," \
+         -e "s,%%%EMAIL%%%,${_me}," >"${startdir}/ABUILD"
+     case $1 in
+          cmake)
+                cat "${MKPKG_DIR}"/mkpkg_templates/cmake >> "${startdir}/ABUILD"
+                ;;
+          python)
+                cat "${MKPKG_DIR}"/mkpkg_templates/python >> "${startdir}/ABUILD"
+                ;;
+          perl)
+                cat "${MKPKG_DIR}"/mkpkg_templates/perl >> "${startdir}/ABUILD"
+                ;;
+          c)
+                cat "${MKPKG_DIR}"/mkpkg_templates/c >> "${startdir}/ABUILD" 
+                ;;
+          qmake)
+                cat "${MKPKG_DIR}"/mkpkg_templates/qmake >> "${startdir}/ABUILD"
+                ;;
+          waf)
+                cat "${MKPKG_DIR}"/mkpkg_templates/waf >> "${startdir}/ABUILD"
+                ;;
+          scons)
+                cat "${MKPKG_DIR}"/mkpkg_templates/scons >> "${startdir}/ABUILD"
+                ;;
+          *)
+                cat "${MKPKG_DIR}"/mkpkg_templates/autotools >> "${startdir}/ABUILD"
+                ;;
+     esac
+         cat "${MKPKG_DIR}"/mkpkg_templates/footer >> "${startdir}/ABUILD"
+  else
+     show_message PWD_NOT_WRITABLE
+  fi
+  show_message END_FUNCTION "copy_abuild()"
+  exit 1
 }
 
 #check build tree source. download, if remote.
 bt_path(){
-	local abuild_path="$1"
-
-	local ret=""
-	local _bt_check=$(echo ${abuild_path} | sed -e 's/^\/.*/root/g' | sed -r 's/^http?:\/\/.*/wget/g' | sed -r 's/^ftp?:\/\/.*/wget/g' | sed -r 's/^api:.*/api/g')
-	case ${_bt_check} in
-		root)
-			ret="${abuild_path}"
-			;;
-		wget)
-			wget --no-check-certificate ${wgetopts} -P "${srcache}" -O "${srcache}/$(basename ${abuild_path})" $1
-			ret="${srcache}"/$(basename ${abuild_path})
-			;;
-		api)
-			bt_pkg_name="$(echo ${abuild_path} | sed -e s,api:,,g -e s,/,-,g)"
-			local bt_url="$(echo ${abuild_path} | sed -e s,api:,http://api.agilialinux.ru/bt/,g)"
-			wget --no-check-certificate ${wgetopts} "${bt_url}" -O /"${srcache}"/${bt_pkg_name}.build_tree.tar.xz
-			ret="${srcache}"/${bt_pkg_name}.build_tree.tar.xz
-			;;
-
-		*)
-			ret="$(pwd)"/${abuild_path}
-			;;
-	esac
-echo $ret
+  show_message EXECUTION_OF_FUNCTIONS "bt_path()"
+  local abuild_path="$1"
+  local ret=""
+  local _bt_check=$(echo ${abuild_path} | sed -e 's/^\/.*/root/g' | sed -r 's/^http?:\/\/.*/wget/g' | sed -r 's/^ftp?:\/\/.*/wget/g' | sed -r 's/^api:.*/api/g')
+  case ${_bt_check} in
+       root)
+            ret="${abuild_path}"
+            ;;
+       wget)
+            wget --no-check-certificate ${wgetopts} -P "${srcache}" -O "${srcache}/$(basename ${abuild_path})" $1
+            ret="${srcache}"/$(basename ${abuild_path})
+            ;;
+       api)
+            bt_pkg_name="$(echo ${abuild_path} | sed -e s,api:,,g -e s,/,-,g)"
+            local bt_url="$(echo ${abuild_path} | sed -e s,api:,http://api.agilialinux.ru/bt/,g)"
+            wget --no-check-certificate ${wgetopts} "${bt_url}" -O /"${srcache}"/${bt_pkg_name}.build_tree.tar.xz
+            ret="${srcache}"/${bt_pkg_name}.build_tree.tar.xz
+            ;;
+       *)
+            ret="$(pwd)"/${abuild_path}
+            ;;
+  esac
+  echo "${ret}"
+  show_message END_FUNCTION "bt_path()"
 }
 
 #check build tree
 check_build_tree() {
-	d_echo "check_build_tree()"
-	local pkg_file="$1"
-	if [ -z "${pkg_file}" ]; then
-		show_message FILE_NOT_FOUND "some_package_build_tree"
-		exit 1
-	fi
+  show_message EXECUTION_OF_FUNCTIONS "check_build_tree()"
+  local pkg_file="$1"
+  if [ -z "${pkg_file}" ]; then
+     show_message FILE_NOT_FOUND "some_package_build_tree"
+     exit 1
+  fi
 
-	if [ ! -f "${pkg_file}" ]; then
-		show_message FILE_NOT_FOUND $1
-		exit 1
-	fi 
+  if [ ! -f "${pkg_file}" ]; then
+     show_message FILE_NOT_FOUND $1
+     exit 1
+  fi
 
-	if [ ! -n "`echo \`basename ${pkg_file}\` | grep build_tree.tar.xz`" ]; then 
-		show_message BT_BAD_FILE_NAME `basename ${pkg_file}`
-		exit 1
-	fi
+  if [ ! -n "`echo \`basename ${pkg_file}\` | grep build_tree.tar.xz`" ]; then 
+     show_message BT_BAD_FILE_NAME `basename ${pkg_file}`
+     exit 1
+  fi
 
-	if [ ! -n "`file -biz ${pkg_file} | grep application/x-tar`" ]; then 
-		show_message BT_NO_ARCHIVE
-		exit 1
-	fi
+  if [ ! -n "`file -biz ${pkg_file} | grep application/x-tar`" ]; then 
+     show_message BT_NO_ARCHIVE
+     exit 1
+  fi
 
-	if [ ! -n "$(tar tf ${pkg_file} | grep ABUILD)" ];then
-		if [ ! -n "$(tar tf ${pkg_file} | grep MOPSBUILD)" ];then
-			show_message BT_NO_ABUILD ${pkg_file}
-			exit 1
-		fi
-	fi
+  if [ ! -n "$(tar tf ${pkg_file} | grep ABUILD)" ];then
+     if [ ! -n "$(tar tf ${pkg_file} | grep MOPSBUILD)" ];then
+        show_message BT_NO_ABUILD ${pkg_file}
+        exit 1
+     fi
+  fi
 
-	BT_FILE="${pkg_file}"
+  BT_FILE="${pkg_file}"
+  show_message END_FUNCTION "check_build_tree()"
 }
 
 #unpack build tree archive from pkg file
 unpack_build_tree_from_pkg() {
-	d_echo "unpack_build_tree_from_pkg() $1"
+  show_message EXECUTION_OF_FUNCTIONS "unpack_build_tree_from_pkg() $1"
 
-	local victim=${1}
-	if [ -z "$victim" ]; then
-		show_message FILE_NOT_FOUND "$victim"
-		exit 1
-	fi
+  local victim=${1}
+  if [ -z "$victim" ]; then
+     show_message FILE_NOT_FOUND "$victim"
+     exit 1
+  fi
 
-	if [ ! -f "$victim" ]; then
-		show_message FILE_NOT_FOUND "$victim"
-		exit 1
-	fi
+  if [ ! -f "$victim" ]; then
+     show_message FILE_NOT_FOUND "$victim"
+     exit 1
+  fi
 
-	if [ ! -n "`file -biz $victim | grep application/x-tar`" ]; then
-		show_message BT_NO_ARCHIVE "$victim"
-		exit 1
-	fi
+  if [ ! -n "`file -biz $victim | grep application/x-tar`" ]; then
+     show_message BT_NO_ARCHIVE "$victim"
+     exit 1
+  fi
 
-	if [ ! -n "`tar tf $victim | grep -e 'build_tree.tar.xz$'`" ];then
-		show_message PKG_HASNT_BT '$victim'                
-		exit 1
-	fi
-	#check, if file is local or have relative path
-	local victim_dir=$(dirname $victim)
-	if [ "${victim_dir:0:1}" != "/" ]; then 
-		victim_dir="$(pwd)"
-	fi
-	#choose destdir
-	local dst_dir="$(pwd)"
-	if [ "${PWD_NOT_WRITABLE}" == "1" ]; then
-		dst_dir="${src_cache_dir}"
-	fi
-	show_message WRITING_TO "${dst_dir}"
-	local tmp_dir="${dst_dir}/${dst_dir}_${RANDOM}"
-	mkdir -p "${tmp_dir}" || exit 1
-	cd "${tmp_dir}" || exit 1
-	tar --wildcards '*build_tree.tar.xz' -xf "${victim_dir}"/$(basename $victim)
-	mv usr/src/BuildTrees/*.tar.xz "${dst_dir}"
-	cd --
-	rm -rf "${tmp_dir}"
+  if [ ! -n "`tar tf $victim | grep -e 'build_tree.tar.xz$'`" ];then
+     show_message PKG_HASNT_BT '$victim'                
+     exit 1
+  fi
+  #check, if file is local or have relative path
+  local victim_dir=$(dirname $victim)
+  if [ "${victim_dir:0:1}" != "/" ]; then 
+     victim_dir="$(pwd)"
+  fi
+  #choose destdir
+  local dst_dir="$(pwd)"
+  if [ "${PWD_NOT_WRITABLE}" == "1" ]; then
+     dst_dir="${src_cache_dir}"
+  fi
+  show_message WRITING_TO "${dst_dir}"
+  local tmp_dir="${dst_dir}/${dst_dir}_${RANDOM}"
+  mkdir -p "${tmp_dir}" || exit 1
+  cd "${tmp_dir}" || exit 1
+  tar --wildcards '*build_tree.tar.xz' -xf "${victim_dir}"/$(basename $victim)
+  mv usr/src/BuildTrees/*.tar.xz "${dst_dir}"
+  cd --
+  rm -rf "${tmp_dir}"
+  show_message END_FUNCTION "unpack_build_tree_from_pkg()"
 }
 
 #prepare work dir
 prepare_work_dir() {
-	local prefix="$1"
-	mkpkg_lockfile="/tmp/mkpkg_${tmp_pkg_name}.lock"
-	d_echo "prepare_work_dir() ${prefix}"
+  show_message EXECUTION_OF_FUNCTIONS "prepare_work_dir() ${prefix}"
+  local prefix="$1"
+  mkpkg_lockfile="/tmp/mkpkg_${tmp_pkg_name}.lock"
 
-	if [ "$(check_lock_file)" == "1" ]; then
-		local user_answer
-		local user_flag="0"
-		show_message ARE_YOU_SURE
-		while [ "${user_flag}" != "1" ]; do
-			show_message YES_OR_NO
-			read user_answer
-			if [ "${user_answer}" == "yes" -o "${user_answer}" == "no" ]; then
-				user_flag="1"
-			fi
-		done
-		if [ "${user_answer}" == "no" ]; then 
-			show_message MKPKG_LOCKED
-			exit 1
-		fi
-	fi
-	
+  if [ "$(check_lock_file)" == "1" ]; then
+     local user_answer
+     local user_flag="0"
+     show_message ARE_YOU_SURE
+     while [ "${user_flag}" != "1" ]; do
+           show_message YES_OR_NO
+           read user_answer
+           if [ "${user_answer}" == "yes" -o "${user_answer}" == "no" ]; then
+              user_flag="1"
+           fi
+     done
+     if [ "${user_answer}" == "no" ]; then 
+        show_message MKPKG_LOCKED
+        exit 1
+     fi
+  fi
 
-	if [ "${RESUME}" != "1" ]; then 
-		rm -rf "${prefix}"
-	fi
+  if [ "${RESUME}" != "1" ]; then 
+     rm -rf "${prefix}"
+  fi
 
-	mkdir -p "${prefix}" || exit 1
-	create_lock_file
-
+  mkdir -p "${prefix}" || exit 1
+  create_lock_file
+  show_message END_FUNCTION "prepare_work_dir() ${prefix}"
 }
 
 #check for deprecated MOPSBUILD
 check_mopsbuild() {
-	local build_path="$1"
-#	d_echo "check_mopsbuild() ${build_path}"
-
-	if [ -f "${build_path}/MOPSBUILD" ]; then 
-#		show_message DEPRECATE_MOPSBUILD
-		mv "${build_path}"/MOPSBUILD "${build_path}"/ABUILD
-	fi
+  local build_path="$1"
+  # d_echo "check_mopsbuild() ${build_path}"
+  if [ -f "${build_path}/MOPSBUILD" ]; then 
+     # show_message DEPRECATE_MOPSBUILD
+     mv "${build_path}"/MOPSBUILD "${build_path}"/ABUILD
+  fi
 }
+
 #prepare working stuff in work dir
 prepare_abuild() {
-	d_echo "prepare_abuild()"
-	tmp_pkg_name=	
-	local tmp_workdir=
-	if [ "${BT_BUILD}" == "1" ]; then
-		d_echo "prepare_abuild() with BT_BUILD=1"
-		local local_bt="$(basename ${BT_FILE})"
-		tmp_pkg_name="$(echo ${local_bt} | sed -e s,\.build_tree.tar.xz,,)"
-		tmp_workdir="${bt_working_dir}/${tmp_pkg_name}"
-		prepare_work_dir "${tmp_workdir}"
-		cd "${tmp_workdir}" || exit 1
-		tar xf "${BT_FILE}"
-		check_mopsbuild "${tmp_workdir}"
-		startdir="${tmp_workdir}"
-		show_message WORK_DIR "$startdir"
-		bumper "${startdir}"
-		check_deprecated_vars "${startdir}"
-	else
-		tmp_pkg_name="$(get_pkg_name)"
-		if [ "${tmp_pkg_name}" == "_ERROR_" -o -z "${tmp_pkg_name}" ]; then 
-			show_message NO_ABUILD
-			exit 1
-		fi
+  show_message EXECUTION_OF_FUNCTIONS "prepare_abuild()"
+  tmp_pkg_name=
+  local tmp_workdir=
+  if [ "${BT_BUILD}" == "1" ]; then
+     d_echo "prepare_abuild() with BT_BUILD=1"
+     local local_bt="$(basename ${BT_FILE})"
+     tmp_pkg_name="$(echo ${local_bt} | sed -e s,\.build_tree.tar.xz,,)"
+     tmp_workdir="${bt_working_dir}/${tmp_pkg_name}"
+     prepare_work_dir "${tmp_workdir}"
+     cd "${tmp_workdir}" || exit 1
+     tar xf "${BT_FILE}"
+     check_mopsbuild "${tmp_workdir}"
+     startdir="${tmp_workdir}"
+     show_message WORK_DIR "${startdir}"
+     bumper "${startdir}"
+     check_deprecated_vars "${startdir}"
+  else
+     tmp_pkg_name="$(get_pkg_name)"
+     if [ "${tmp_pkg_name}" == "_ERROR_" -o -z "${tmp_pkg_name}" ]; then 
+        show_message NO_ABUILD
+        exit 1
+     fi
 
-		if [ "${USE_REMOTE}" == "1" ]; then
-			d_echo "prepare_abuild() with USE_REMOTE=1"
-			tmp_workdir="${bt_working_dir}/${tmp_pkg_name}"
-			prepare_work_dir "${tmp_workdir}"
-			startdir="${tmp_workdir}"
-			show_message WORK_DIR "$startdir"
-			bumper "${REAL_CWD}"
-			check_deprecated_vars "${REAL_CWD}"
-			for i in ABUILD CHANGELOG files slack-desc patches doinst.sh.gz doinst.sh postremove.sh preremove.sh; do
-				cp -a "$(pwd)"/$i "${startdir}" 2>/dev/null
-			done
+     if [ "${USE_REMOTE}" == "1" ]; then
+        d_echo "prepare_abuild() with USE_REMOTE=1"
+        tmp_workdir="${bt_working_dir}/${tmp_pkg_name}"
+        prepare_work_dir "${tmp_workdir}"
+        startdir="${tmp_workdir}"
+        show_message WORK_DIR "$startdir"
+        bumper "${REAL_CWD}"
+        check_deprecated_vars "${REAL_CWD}"
+        for i in ABUILD CHANGELOG files slack-desc patches doinst.sh.gz doinst.sh postremove.sh preremove.sh; do
+            cp -a "$(pwd)"/$i "${startdir}" 2>/dev/null
+        done
 
-		#	bumper "${startdir}"
-		else
-			bumper "${startdir}"
-			check_deprecated_vars "${startdir}"
-		fi
-	fi
+        # bumper "${startdir}"
+     else
+        bumper "${startdir}"
+        check_deprecated_vars "${startdir}"
+     fi
+  fi
+  show_message END_FUNCTION "prepare_abuild()"
 }
 
 create_lock_file() {
-	echo $$ > "${mkpkg_lockfile}"
-	chmod go-rwx "${mkpkg_lockfile}"
+  echo $$ > "${mkpkg_lockfile}"
+  chmod go-rwx "${mkpkg_lockfile}"
 }
 
 check_lock_file() {
-	if [ -e "${mkpkg_lockfile}" ]; then
-		local lockpid=$(cat ${mkpkg_lockfile})
-
-		local mkpkg_running=$(ps -A | grep ${lockpid} | grep ${tmp_pkg_name})
-		if [ -n "${mkpkg_running}" ]; then 
-			echo "1"
-		else
-			echo "0"
-		fi
-	fi
+  if [ -e "${mkpkg_lockfile}" ]; then
+     local lockpid=$(cat ${mkpkg_lockfile})
+     local mkpkg_running=$(ps -A | grep ${lockpid} | grep ${tmp_pkg_name})
+     if [ -n "${mkpkg_running}" ]; then 
+        echo "1"
+     else
+        echo "0"
+     fi
+  fi
 }
 
 remove_lock_file() {
-	rm -f "${mkpkg_lockfile}"
+  rm -f "${mkpkg_lockfile}"
 }
 
 #bump version or build
 bumper() {
-	local abuild_path="$1"
-	if [ -n "${INCREASE_BUILD}" ]; then
-		local _curr_pkg_build="$(cat "/${abuild_path}/ABUILD" | grep -m 1 '^pkgbuild' | cut -d '=' -f 2-)"
-		let "_curr_pkg_build+=1" 2>/dev/null || show_message CANT_INCREMENT_BUILD "${_curr_pkg_build}"
-		BUMP_BUILD=${_curr_pkg_build}
-	fi
-	d_echo "bumper(): bump version or build in ${abuild_path}/ABUILD [${BUMP_VERSION}:${BUMP_BUILD}]"
-	if [ -n "${BUMP_VERSION}" ]; then
-		sed -i "0,/^pkgver=.*/s/^pkgver=.*/pkgver=$BUMP_VERSION/" "${abuild_path}"/ABUILD || exit 1
-	fi
+  local abuild_path="$1"
+  if [ -n "${INCREASE_BUILD}" ]; then
+     local _curr_pkg_build="$(cat "/${abuild_path}/ABUILD" | grep -m 1 '^pkgbuild' | cut -d '=' -f 2-)"
+     let "_curr_pkg_build+=1" 2>/dev/null || show_message CANT_INCREMENT_BUILD "${_curr_pkg_build}"
+     BUMP_BUILD=${_curr_pkg_build}
+  fi
+  d_echo "bumper(): bump version or build in ${abuild_path}/ABUILD [${BUMP_VERSION}:${BUMP_BUILD}]"
+  if [ -n "${BUMP_VERSION}" ]; then
+     sed -i "0,/^pkgver=.*/s/^pkgver=.*/pkgver=$BUMP_VERSION/" "${abuild_path}"/ABUILD || exit 1
+  fi
 
-	if [ -n "${BUMP_BUILD}" ]; then
-		sed -i "0,/^pkgbuild=.*/s/^pkgbuild=.*/pkgbuild=$BUMP_BUILD/" "${abuild_path}"/ABUILD || exit 1
-	fi
+  if [ -n "${BUMP_BUILD}" ]; then
+     sed -i "0,/^pkgbuild=.*/s/^pkgbuild=.*/pkgbuild=$BUMP_BUILD/" "${abuild_path}"/ABUILD || exit 1
+  fi
 }
+
 #check if abuild exists and get basic package attrs
 get_pkg_name() {
-	check_mopsbuild "$(pwd)"
-	if [ -f "$(pwd)/ABUILD" ]; then
-		local pkgname="$(cat /"$(pwd)"/ABUILD | grep -m 1 '^pkgname' | cut -d '=' -f 2-)"
-		echo "${pkgname}"
-	else
-		echo "_ERROR_"
-	fi
+  check_mopsbuild "$(pwd)"
+  if [ -f "$(pwd)/ABUILD" ]; then
+     local pkgname="$(cat /"$(pwd)"/ABUILD | grep -m 1 '^pkgname' | cut -d '=' -f 2-)"
+     echo "${pkgname}"
+  else
+     echo "_ERROR_"
+  fi
 }
 
 #captain obvious to rescue...
 check_deprecated_vars() {
-	local abuild_path="$1"
-	d_echo "check_deprecated_vars() in ${abuild_path}/ABUILD"
-	if [ -n "$(cat "${abuild_path}/ABUILD" | grep '^author')" ]; then
-		show_message DEPRECATED_VAR author
-		sed -i "s/^author=/#author=/g" "${abuild_path}"/ABUILD
-	fi
+  local abuild_path="$1"
+  show_message EXECUTION_OF_FUNCTIONS "check_deprecated_vars() in ${abuild_path}/ABUILD"
+  if [ -n "$(cat "${abuild_path}/ABUILD" | grep '^author')" ]; then
+     show_message DEPRECATED_VAR author
+     sed -i "s/^author=/#author=/g" "${abuild_path}"/ABUILD
+  fi
 
-	if [ -n "$(cat "${abuild_path}/ABUILD" | grep '^email')" ]; then
-		show_message DEPRECATED_VAR email
-		sed -i "s/^email=/#email=/g" "${abuild_path}"/ABUILD
-	fi
+  if [ -n "$(cat "${abuild_path}/ABUILD" | grep '^email')" ]; then
+     show_message DEPRECATED_VAR email
+     sed -i "s/^email=/#email=/g" "${abuild_path}"/ABUILD
+  fi
 
-	#check for "$startdir/pkg" and its variants presence in ABUILD.
-	if [ -n "$(cat "${abuild_path}"/ABUILD | grep '$startdir/pkg')" -o -n "$(cat "${abuild_path}"/ABUILD | grep '${startdir}/pkg')" ]; then
-		show_message ERR_STARTDIR_PKG
-		exit 1
-	fi
-	#same shit with $startdir/src
-	if [  "$(cat "${abuild_path}"/ABUILD | grep '$startdir/src')" -o "$(cat "${abuild_path}"/ABUILD | grep '${startdir}/src')" ]; then
-		show_message ERR_STARTDIR_SRC
-		exit 1
-	fi
-
-
+  #check for "$startdir/pkg" and its variants presence in ABUILD.
+  if [ -n "$(cat "${abuild_path}"/ABUILD | grep '${startdir}/pkg')" -o -n "$(cat "${abuild_path}"/ABUILD | grep '${startdir}/pkg')" ]; then
+     show_message ERR_STARTDIR_PKG
+     exit 1
+  fi
+  #same shit with $startdir/src
+  if [  "$(cat "${abuild_path}"/ABUILD | grep '${startdir}/src')" -o "$(cat "${abuild_path}"/ABUILD | grep '${startdir}/src')" ]; then
+     show_message ERR_STARTDIR_SRC
+     exit 1
+  fi
+  show_message END_FUNCTION "check_deprecated_vars() in ${abuild_path}/ABUILD"
 }
 
 #########################
@@ -658,277 +664,275 @@ check_deprecated_vars() {
 
 #check abuild for commom errors
 check_abuild() {
-	. "${startdir}"/ABUILD
-#check main vars are present
-	local main_vars="pkgname pkgver pkgbuild arch tags"
-	if [ "$(check_var_set main_vars)" == "1" ]; then 
-		exit 1
-	fi
+  show_message EXECUTION_OF_FUNCTIONS "${startdir}/ABUILD"
+  . "${startdir}"/ABUILD
+  #check main vars are present
+  local main_vars="pkgname pkgver pkgbuild arch tags"
+  if [ "$(check_var_set main_vars)" == "1" ]; then 
+     exit 1
+  fi
 
+  #check for description presence
+  local desc_vars="shortdesc longdesc"
+  if [ "$(check_var_set desc_vars)" == "1" -a ! -e "${startdir}/slack-desc" ]; then
+     show_message NO_DESC
+     exit 1
+  fi
 
+  #does build() exist?
+  if [ ! "$(grep ^build\(\) "${startdir}"/ABUILD)" ]; then 
+     local build_vars="BUILD_SYSTEM BUILD_KEYS"
+     if [ "$(check_var_set ${build_vars})" == "1" ]; then
+        show_message NO_BUILD_FUNC
+        exit 1
+     fi
+  else
+     if [ "${BUILD_SYSTEM}" == "custom" ]; then 
+        USE_CUSTOM=1
+        fi
+        build_exists=1
+  fi
 
-#check for description presence
-	local desc_vars="shortdesc longdesc"
-	if [ "$(check_var_set desc_vars)" == "1" -a ! -e "${startdir}/slack-desc" ]; then
-		show_message NO_DESC
-		exit 1
-	fi
-
-#does build() exist?
-	if [ ! "$(grep ^build\(\) "${startdir}"/ABUILD)" ]; then 
-		local build_vars="BUILD_SYSTEM BUILD_KEYS"
-		if [ "$(check_var_set ${build_vars})" == "1" ]; then
-			show_message NO_BUILD_FUNC
-			exit 1
-		fi
-	else 
-		if [ "${BUILD_SYSTEM}" == "custom" ]; then 
-			USE_CUSTOM=1
-		fi
-		build_exists=1
-	fi
-
-#check build_deps
-	local m_build_deps="${build_deps}"
-	local bad=0
-	case "${BUILD_SYSTEM}" in
-		scons)
-			m_build_deps+=" scons"
-			;;
-	esac
-	for b_dep in $m_build_deps; do
-		local sign=`echo "$b_dep" | grep -o '[<>]\?=\?*'`
-		set -- ${b_dep//${sign}/ }
-		local dep_name=$1
-		local dep_ver=$2
-		local system_pkg_ver=`sqlite3 /var/mpkg/packages.db "select package_version from packages where package_name='$dep_name' and package_installed='1';"`    
-		d_echo "checking for build dep $dep_name. Found version '$system_pkg_ver'"
-		if [ -z "${system_pkg_ver}" ]; then 
-			system_pkg_ver=`sqlite3 /var/mpkg/packages.db "select package_version from packages where package_provides='$dep_name' and package_installed='1';"`
-		d_echo "advanced checking for build dep $dep_name. Found version '$system_pkg_ver' via PROVIDES"
-		fi
-		if [ -z "$system_pkg_ver" ]; then
-			show_message BUILD_DEP_NOT_FOUND $b_dep
-			INSTALL_BUILDDEPS=1
-			ipkglistdep+=${dep_name}' '
-		fi
-		if [ -n "${dep_ver}" -a -n "${system_pkg_ver}" ];then
-			local cmp_bad=0
-			case `mkpkg_vercmp $dep_ver $system_pkg_ver` in
-				-1) 
-					if [ ! "${sign}" = ">" -a ! "${sign}" = ">=" ];then
-						cmp_bad=1
-					fi 
-					;;
-				0) 
-					if [ "${sign}" = "<" -a "${sign}" = ">" ]; then
-						cmp_bad=1
-					fi
-			       		;;
-				1) 
-					if [ ! "${sign}" = "<" -a ! "${sign}" = "<=" ];then
-						cmp_bad=1
-					fi 
-					;;
-			esac
-		fi
-		if [ "$cmp_bad" == "1" ]; then 
-			show_message BUILD_DEP_UNRESOLVED $b_dep $system_pkg_ver
-			bad=1
-		fi
-	done
-if [ "${INSTALL_BUILDDEPS}" == "1" ]; then
-	if [ "${BUILDDEPS_AUTO_INSTALL}" == "1" ]; then
-		mpkg -y install ${ipkglistdep}
-	else
-		if [ "${INTERACTIVE}" == "1" ]; then
-			mpkg install ${ipkglistdep}
-		else
-			bad=1
-		fi
-	fi
-	if [ "$?" == "1" ]; then
-		bad=1
-	fi
-fi
-if [ "${bad}" == "1" ]; then
-	exit 1
-fi
+  #check build_deps
+  local m_build_deps="${build_deps}"
+  local bad=0
+  case "${BUILD_SYSTEM}" in
+        scons)
+             m_build_deps+=" scons"
+             ;;
+ esac
+   for b_dep in $m_build_deps; do
+       local sign=`echo "$b_dep" | grep -o '[<>]\?=\?*'`
+       set -- ${b_dep//${sign}/ }
+       local dep_name=$1
+       local dep_ver=$2
+       local system_pkg_ver=`sqlite3 /var/mpkg/packages.db "select package_version from packages where package_name='$dep_name' and package_installed='1';"`    
+       d_echo "checking for build dep $dep_name. Found version '$system_pkg_ver'"
+       if [ -z "${system_pkg_ver}" ]; then 
+          system_pkg_ver=`sqlite3 /var/mpkg/packages.db "select package_version from packages where package_provides='$dep_name' and package_installed='1';"`
+          d_echo "advanced checking for build dep $dep_name. Found version '$system_pkg_ver' via PROVIDES"
+       fi
+       if [ -z "$system_pkg_ver" ]; then
+          show_message BUILD_DEP_NOT_FOUND $b_dep
+          INSTALL_BUILDDEPS=1
+          ipkglistdep+=${dep_name}' '
+       fi
+       if [ -n "${dep_ver}" -a -n "${system_pkg_ver}" ];then
+          local cmp_bad=0
+          case `mkpkg_vercmp $dep_ver $system_pkg_ver` in
+               -1)
+                    if [ ! "${sign}" = ">" -a ! "${sign}" = ">=" ]; then
+                       cmp_bad=1
+                    fi
+                    ;;
+               0)
+                    if [ "${sign}" = "<" -a "${sign}" = ">" ]; then
+                       cmp_bad=1
+                    fi
+                    ;;
+               1)
+                    if [ ! "${sign}" = "<" -a ! "${sign}" = "<=" ]; then
+                       cmp_bad=1
+                    fi
+                    ;;
+        esac
+     fi
+        if [ "$cmp_bad" == "1" ]; then 
+           show_message BUILD_DEP_UNRESOLVED $b_dep $system_pkg_ver
+           bad=1
+        fi
+  done
+  if [ "${INSTALL_BUILDDEPS}" == "1" ]; then
+     if [ "${BUILDDEPS_AUTO_INSTALL}" == "1" ]; then
+        mpkg -y install ${ipkglistdep}
+     else
+        if [ "${INTERACTIVE}" == "1" ]; then
+           mpkg install ${ipkglistdep}
+        else
+           bad=1
+        fi
+     fi
+     if [ "$?" == "1" ]; then
+        bad=1
+     fi
+  fi
+  if [ "${bad}" == "1" ]; then
+     exit 1
+  fi
+  show_message END_FUNCTION "${startdir}/ABUILD"
 }
 
 #check set of vars for existance
 check_var_set() {
-	local vars_to_check=$1
-	local bad_var_set=0
-	for lv in ${vars_to_check}; do
-		if [ ! "${!lv}" ]; then
-			show_message VAR_NOT_SET $lv
-			bad_var_set=1
-		fi
-	done
-	echo $bad_var_set
+  local vars_to_check=$1
+  local bad_var_set=0
+  for lv in ${vars_to_check}; do
+      if [ ! "${!lv}" ]; then
+         show_message VAR_NOT_SET $lv
+         bad_var_set=1
+      fi
+  done
+  echo "${bad_var_set}"
 }
 
 #what is this function about, hmmm?
 check_arch() {
-	local checked_arch=$1
-	local checked_pkg=$2
-	d_echo "check_arch() with ${checked_arch} ${checked_pkg}" 
-	local real_arch=
-	if [ -n "${BUILD_FARM_ARCH}" ]; then
-		real_arch="${BUILD_FARM_ARCH}"
-	else
-		real_arch=$(uname -m)
-	fi
+  show_message EXECUTION_OF_FUNCTIONS "check_arch() with ${checked_arch} ${checked_pkg}"
+  local checked_arch=$1
+  local checked_pkg=$2
+  local real_arch=
+  if [ -n "${BUILD_FARM_ARCH}" ]; then
+     real_arch="${BUILD_FARM_ARCH}"
+  else
+     real_arch=$(uname -m)
+  fi
 
-	if [ "${checked_arch}" == "any" -o "${checked_arch}" == "auto" ]; then
-		ARCH="${real_arch}"
-	else
-		ARCH="${checked_arch}"
-	fi
+  if [ "${checked_arch}" == "any" -o "${checked_arch}" == "auto" ]; then
+     ARCH="${real_arch}"
+  else
+     ARCH="${checked_arch}"
+  fi
 
-	if [ "$(arch_type ${real_arch})" != "$(arch_type ${ARCH})" -a "${ARCH}" != "noarch" -a "${ARCH}" != "fw" ]; then 
-		show_message ARCH_MISMATCH ${checked_arch} ${real_arch}
-		exit 1
-	fi
+  if [ "$(arch_type ${real_arch})" != "$(arch_type ${ARCH})" -a "${ARCH}" != "noarch" -a "${ARCH}" != "fw" ]; then 
+     show_message ARCH_MISMATCH ${checked_arch} ${real_arch}
+     exit 1
+  fi
 
-	if [ -n "${checked_pkg}" ]; then
-		echo "${checked_pkg}_arch() {">>"$startdir/${tmp_pkg_name}.AgiliaBuild"
-		echo "	ARCH=${ARCH}">>"$startdir/${tmp_pkg_name}.AgiliaBuild"
-		echo "}">>"$startdir/${tmp_pkg_name}.AgiliaBuild"
-	fi
+  if [ -n "${checked_pkg}" ]; then
+     echo "${checked_pkg}_arch() {">>"$startdir/${tmp_pkg_name}.AgiliaBuild"
+     echo "	ARCH=${ARCH}">>"$startdir/${tmp_pkg_name}.AgiliaBuild"
+     echo "}">>"$startdir/${tmp_pkg_name}.AgiliaBuild"
+  fi
 
-	if [ "${real_arch}" == "x86_64" ]; then
-		LIBDIRSUFFIX=64
-	fi
+  if [ "${real_arch}" == "x86_64" ]; then
+     LIBDIRSUFFIX=64
+  fi
+  show_message END_FUNCTION "check_arch() with ${checked_arch} ${checked_pkg}"
 }
 
 #helper for check_arch()
 arch_type() {
-	local a_type
-	case $1 in
-		i386 | i486 | i686 | i586) 
-			a_type=x86
-			;;
-		*) 
-			a_type=$1 
-		;;
-	esac
-	[[ $a_type ]] || a_type="undefined"
-	echo $a_type
+  local a_type
+  case $1 in
+       i386 | i486 | i686 | i586) 
+            a_type=x86
+            ;;
+       *)
+            a_type=$1 
+            ;;
+  esac
+  [[ ${a_type} ]] || a_type="undefined"
+  echo ${a_type}
 }
 
-
 check_desc() {
-	local desc_dir="${startdir}/${pkgname}/install"
-	d_echo "check_desc() for ${startdir}/${pkgname}/install"
-	mkdir -p "${desc_dir}" || exit 1
-	if [ -z "${shortdesc}" ]; then 
-		show_message NO_DESC
-	       	exit 1
-	else
-		local shd=$(python "${MKPKG_DIR}"/mkpkg_nonlatin.py "${shortdesc}")
-		if [ -n "${longdesc}" ]; then
-			local lgd=$(python "${MKPKG_DIR}"/mkpkg_nonlatin.py "${longdesc}")
-		fi
-	
-		if [ -n "${shd}" ]; then
-			show_message LATIN_ONLY shortdesc $((shd+1))
-			show_bad_letter "${shortdesc}" ${shd}
-		fi
-		
-		if [ -n "${lgd}" ]; then 
-			show_message LATIN_ONLY longdesc $((lgd+1))
-			show_bad_letter "${longdesc}" ${lgd}
-		fi
+  show_message EXECUTION_OF_FUNCTIONS "check_desc() for ${startdir}/${pkgname}/install"
+  local desc_dir="${startdir}/${pkgname}/install"
+  mkdir -p "${desc_dir}" || exit 1
+  if [ -z "${shortdesc}" ]; then 
+     show_message NO_DESC
+     exit 1
+  else
+     local shd=$(python "${MKPKG_DIR}"/mkpkg_nonlatin.py "${shortdesc}")
+     if [ -n "${longdesc}" ]; then
+        local lgd=$(python "${MKPKG_DIR}"/mkpkg_nonlatin.py "${longdesc}")
+     fi
+     if [ -n "${shd}" ]; then
+        show_message LATIN_ONLY shortdesc $((shd+1))
+        show_bad_letter "${shortdesc}" ${shd}
+     fi
 
-		if [ -n "${lgd}" -o -n "${shd}" ]; then
-			exit 1
-		fi
+     if [ -n "${lgd}" ]; then 
+        show_message LATIN_ONLY longdesc $((lgd+1))
+        show_bad_letter "${longdesc}" ${lgd}
+     fi
 
-	fi
+     if [ -n "${lgd}" -o -n "${shd}" ]; then
+        exit 1
+     fi
+  fi
+  show_message END_FUNCTION "check_desc() for ${startdir}/${pkgname}/install"
 }
 
 show_bad_letter() {
-	local desc_str="$1"
-	local position=$2
-	
-	local _before=${desc_str:0:position}
-	local _after=${desc_str:((position+1))}
-	echo -e "${_before}\e[41m${desc_str:position:1}\E[0m${_after}"
+  local desc_str="$1"
+  local position=$2
+
+  local _before=${desc_str:0:position}
+  local _after=${desc_str:((position+1))}
+  echo -e "${_before}\e[41m${desc_str:position:1}\E[0m${_after}"
 }
 
 
 check_tags() {
-	d_echo "Check tags for package ${pkgname}"
-	local long=0
-	local short=0
-	local bad=0
-	local tag_num=0
-	for tag in $tags; do
-		d_echo "	check $tag"
-		if [ ! "$(grep -w ^$tag$ "${MKPKG_DIR}"/taglist)" ]; then
-			show_message UNKNOWN_TAG $tag
-			bad=1
-		fi
-		
-		local tire=`echo "$tag" | sed -n "/.-./p"`
-		if [ ! "$tire" = "" ]; then
-			((long++))
-		else
-			((short++))
-		fi
-		if [ "${tag}" != "x86" -a "${tag}" != "proprietary" ]; then
-			((tag_num++))
-		fi
-	done
+  show_message EXECUTION_OF_FUNCTIONS "check_tags() ${pkgname}"
+  local long=0
+  local short=0
+  local bad=0
+  local tag_num=0
+  for tag in ${tags}; do
+      d_echo "	check ${tag}"
+      if [ ! "$(grep -w ^${tag}$ "${MKPKG_DIR}"/taglist)" ]; then
+         show_message UNKNOWN_TAG $tag
+         bad=1
+      fi
+      local tire=`echo "${tag}" | sed -n "/.-./p"`
+      if [ ! "${tire}" = "" ]; then
+         ((long++))
+      else
+         ((short++))
+      fi
+      if [ "${tag}" != "x86" -a "${tag}" != "proprietary" -a "${tag}" != "compat32" ]; then
+         ((tag_num++))
+      fi
+  done
 
-	if [ "${long}" = "0" ]; then
-		show_message NO_LONG
-		bad=1
-	fi
-	
-	if [ "${short}" = "0" ]; then
-		show_message NO_SHORT
-		bad=1
-	fi
-	
-	if (( ${tag_num} > 2 )) ; then
-		show_message TOO_MANY_TAGS ${pkgname}
-		bad=1
-	fi
-		
-	if [ "${bad}" == "1" ]; then 
-		exit 1
-	fi
-	d_echo "check tags end"
+  if [ "${long}" = "0" ]; then
+     show_message NO_LONG
+     bad=1
+  fi
+
+  if [ "${short}" = "0" ]; then
+     show_message NO_SHORT
+     bad=1
+  fi
+
+  if (( ${tag_num} > 2 )) ; then
+     show_message TOO_MANY_TAGS ${pkgname}
+     bad=1
+  fi
+
+  if [ "${bad}" == "1" ]; then 
+     exit 1
+  fi
+  show_message END_FUNCTION "check_tags() ${pkgname}"
 }
 
 check_provides() {
    if [ -n "$provides" ];then
-        local _provides=`echo $pkgname | grep $provides`
-        if [ -z "${_provides}" ];then 
-		show_message BAD_PROVIDE
-		exit 1
-	fi
-	unset provides
-    fi
+      local _provides=`echo $pkgname | grep $provides`
+      if [ -z "${_provides}" ];then 
+         show_message BAD_PROVIDE
+         exit 1
+      fi
+      unset provides
+  fi
 }
 
 check_sequence() {
-	local checked_pkg=$1
-	check_arch ${arch} ${checked_pkg}
-	check_desc
-	check_tags "${tags}"
-	check_provides
+  local checked_pkg=$1
+  check_arch ${arch} ${checked_pkg}
+  check_desc
+  check_tags "${tags}"
+  check_provides
 }
 
 del_work_dir() {
-	if [ -n "${bt_working_dir}" -a ${USE_REMOTE} == "1" -a "${NOT_CLEAR_SOURCE}" != "1" ]; then
-		d_echo "deleting ${startdir}"
-		rm -rf "${startdir}"
-	fi
-	remove_lock_file
+  if [ -n "${bt_working_dir}" -a ${USE_REMOTE} == "1" -a "${NOT_CLEAR_SOURCE}" != "1" ]; then
+     d_echo "deleting ${startdir}"
+     rm -rf "${startdir}"
+  fi
+  remove_lock_file
 }
 
 check_config
@@ -1000,10 +1004,10 @@ echo "LIBDIRSUFFIX=${LIBDIRSUFFIX}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
 r_pkgname=${pkgname}
 p_pkgname=${pkgname}
 for pkg in ${pkglist}; do
-	unset provides
-	${pkg}
-	d_echo "checking data for package ${pkgname}..."
-	check_sequence ${pkg}
+    unset provides
+    ${pkg}
+    d_echo "checking data for package ${pkgname}..."
+    check_sequence ${pkg}
 done
 echo "" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
 cat "${startdir}/ABUILD" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
@@ -1021,16 +1025,39 @@ chmod 755 "${startdir}/${tmp_pkg_name}.AgiliaBuild"
 fakeroot "${startdir}/${tmp_pkg_name}.AgiliaBuild"
 build_status=$?
 if [ "${build_status}" != "0" ]; then 
-	show_message BUILD_ERROR
-	del_work_dir
-	exit 1
+   show_message BUILD_ERROR
+   del_work_dir
+   exit 1
+fi
+
+if [ "${ARCH}" = "i686" ]; then
+  . "${startdir}"/ABUILD
+  temp_arch="${arch}"
+  main_pkgname="${pkgname}"
+  [ "${temp_arch}"="auto" ] && temp_arch="${ARCH}"
+  if [ -n "$(echo ${tags} | grep -w 'compat32')" ]; then
+     temp_pkg=`grep "${pkgname}-${pkgver}-${temp_arch}-${pkgbuild}.txz" "${startdir}"/install_list.${main_pkgname}`
+     echo "Start script converts package ${temp_pkg} to x86_64 compat32 package"
+     `/usr/bin/mkpkg_32to64 "${temp_pkg}"`
+  fi
+  for pkg in ${pkglist}; do
+      ${pkg}
+      if [ -n "$(echo ${tags} | grep -w 'compat32')" ]; then
+         [ "${temp_arch}"="auto" ] && temp_arch="${ARCH}"
+         temp_pkg=`grep "${pkgname}-${pkgver}-${temp_arch}-${pkgbuild}.txz" "${startdir}"/install_list.${main_pkgname}`
+         echo "Start script converts package ${temp_pkg} to x86_64 compat32 package"
+         set -x
+         `mkpkg_32to64 "${temp_pkg}"`
+      fi
+  done
+  . "${startdir}"/ABUILD
 fi
 
 if [ "${INSTALL}" == "1" ]; then
-	for ipkg in $(cat "${startdir}"/install_list.${pkgname}); do
-		ipkglist+="${ipkg} "
-	done
-	mpkg -y install ${ipkglist}
+   for ipkg in $(cat "${startdir}"/install_list.${pkgname}); do
+       ipkglist+="${ipkg} "
+   done
+   mpkg -y install ${ipkglist}
 fi
 
 del_work_dir
