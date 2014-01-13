@@ -74,7 +74,9 @@ get_maintainer() {
   show_message EXECUTION_OF_FUNCTIONS "get_maintainer()"
   mn=$(mpkg-maintainer --show | grep 'MaintainerName: ' | cut -d ':' -f2 | cut -b2-)
   me=$(mpkg-maintainer --show | grep 'MaintainerEmail: ' | cut -d ':' -f2 | cut -b2-)
-  if [ -z "$mn" -o -z "$me" ]; then
+  export mn
+  export me
+  if [ -z "${mn}" -o -z "$me" ]; then
      show_message NO_INFO_IN_XML
      exit 1
   fi
@@ -245,7 +247,7 @@ set_options(){
                        INSTALL=1
                        ;;
                  -i|--install)
-                       if [ "$UID" != 0 ]; then
+                       if [ "${UID}" != 0 ]; then
                           show_message I_M_NOT_ROOT
                           exit 1
                        else
