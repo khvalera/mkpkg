@@ -20,22 +20,6 @@ fi
 
 PKGLIST="$@"
 
-check_dir_whitelist() {
-  local DIR=$(echo ${1} | sed 's/^\.//g')
-  local WHITELIST="/lib /usr/lib /usr/local/lib /usr/i486-slackware-linux/lib /usr/i686-slackware-linux/lib"
-  local bad=1
-  for check in ${WHITELIST} ; do
-      local zzz=$(echo ${DIR} | sed s:^${check}::g)
-      if [ "${DIR}" != "${zzz}" ] ; then
-         bad=0
-      fi
-  done
-  if [ "${bad}" = "1" ] ; then
-     echo "Skipping files from ${DIR}"
-  fi
-  return ${bad}
-}
-
 make_compat32() {
   set -e
   local pkg_file=$1
@@ -158,22 +142,6 @@ modify_meta() {
   fi
   # Add maintainer name and email
   mpkg-setmeta "${dest_dir}" --maintainer-name=${mn} --maintainer-email=${me}
-  return 0
-}
-
-find_package_directory() {
-  local result_func="$1"
-  local pkg_dir="$2"
-  local pkg_arch="$3"
-  [ -z "${pkg_arch}" ] && pkg_arch="*"
-  cd "${pkg_dir}"
-  for n in ${pkg_arch} ; do
-      for i in $(find . -name "${newdep_name}*-${n}-*.txz") ; do
-          eval ${result_func}="$i"
-          return
-      done
-  done
-  eval ${result_func}=""
   return 0
 }
 
