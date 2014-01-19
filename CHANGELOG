@@ -3,6 +3,7 @@ Script is rewritten mkpkg_32to64, to convert packages i686 compat32 x86-64 with 
 Added automatic creation compat32 packages collected under i686
 Fixed bug mkpkg with duplicate dependencies.
 Most replicas made multi-lingual (English, Russian, Ukrainian)
+Changed the script mkpkg_make64 to convert batches of i686 in x86-64 with automatic recording dependencies
 
 1.2.3
 Moved to aix27249 repo
