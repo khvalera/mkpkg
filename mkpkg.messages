@@ -928,6 +928,15 @@ uk) echo -e "\e[31mНе вдається підключитися до серв�
 *) echo -e "\e[31mUnable to connect to server: $2\e[0m";;
 esac;;
 
+##########
+CONVERTS_PACKAGE_TO_X86_64*)###################################################
+############
+case $lang in
+ru) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Запуск скрипта преобразования пакета $2 в x86_64\e[0m";;
+uk) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Запуск скрипта перетворення пакету $2 у x86_64\e[0m";;
+*) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Start script converts package $2 to x86_64\e[0m";;
+esac;;
+
 ######################end
 *)
 echo -e "Unknown string $1"; exit 1

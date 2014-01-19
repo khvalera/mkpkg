@@ -8,7 +8,7 @@
 # 
 
 # This is cool software, so it has version!
-MKPKG_VER=%MKPKG_VER%
+MKPKG_VER=1.3.3_git20140119
 
 # FIXME: this string should be replaced during CMake build
 MKPKG_INSTALL_PREFIX=/usr
@@ -1039,17 +1039,28 @@ if [ "${ARCH}" = "i686" ]; then
   [ "${temp_arch}"="auto" ] && temp_arch="${ARCH}"
   if [ -n "$(echo ${tags} | grep -w 'compat32')" ]; then
      temp_pkg=`grep "${pkgname}-${pkgver}-${temp_arch}-${pkgbuild}.txz" "${startdir}"/install_list.${main_pkgname}`
-     echo "Start script converts package ${temp_pkg} to x86_64 compat32 package"
+     show_message CONVERTS_PACKAGE_TO_X86_64 ${temp_pkg}
      `/usr/bin/mkpkg_32to64 "${temp_pkg}"`
+  else
+     if [ -n "$(echo ${tags} | grep -w 'x86')" ]; then
+        temp_pkg=`grep "${pkgname}-${pkgver}-${temp_arch}-${pkgbuild}.txz" "${startdir}"/install_list.${main_pkgname}`
+        show_message CONVERTS_PACKAGE_TO_X86_64 ${temp_pkg}
+        `/usr/bin/mkpkg_make64 "${temp_pkg}"`
+     fi
   fi
   for pkg in ${pkglist}; do
       ${pkg}
       if [ -n "$(echo ${tags} | grep -w 'compat32')" ]; then
          [ "${temp_arch}"="auto" ] && temp_arch="${ARCH}"
          temp_pkg=`grep "${pkgname}-${pkgver}-${temp_arch}-${pkgbuild}.txz" "${startdir}"/install_list.${main_pkgname}`
-         echo "Start script converts package ${temp_pkg} to x86_64 compat32 package"
-         set -x
+         show_message CONVERTS_PACKAGE_TO_X86_64 ${temp_pkg}
          `mkpkg_32to64 "${temp_pkg}"`
+      else
+         if [ -n "$(echo ${tags} | grep -w 'x86')" ]; then
+            temp_pkg=`grep "${pkgname}-${pkgver}-${temp_arch}-${pkgbuild}.txz" "${startdir}"/install_list.${main_pkgname}`
+            show_message CONVERTS_PACKAGE_TO_X86_64 ${temp_pkg}
+            `/usr/bin/mkpkg_make64 "${temp_pkg}"`
+         fi
       fi
   done
   . "${startdir}"/ABUILD
