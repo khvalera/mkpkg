@@ -1040,12 +1040,12 @@ if [ "${ARCH}" = "i686" ]; then
   if [ -n "$(echo ${tags} | grep -w 'compat32')" ]; then
      temp_pkg=`grep "${pkgname}-${pkgver}-${temp_arch}-${pkgbuild}.txz" "${startdir}"/install_list.${main_pkgname}`
      show_message CONVERTS_PACKAGE_TO_X86_64 ${temp_pkg}
-     `/usr/bin/mkpkg_32to64 "${temp_pkg}"`
+     /usr/bin/mkpkg_32to64 "${temp_pkg}"
   else
      if [ -n "$(echo ${tags} | grep -w 'x86')" ]; then
         temp_pkg=`grep "${pkgname}-${pkgver}-${temp_arch}-${pkgbuild}.txz" "${startdir}"/install_list.${main_pkgname}`
         show_message CONVERTS_PACKAGE_TO_X86_64 ${temp_pkg}
-        `/usr/bin/mkpkg_make64 "${temp_pkg}"`
+        /usr/bin/mkpkg_make64 "${temp_pkg}"
      fi
   fi
   for pkg in ${pkglist}; do
@@ -1054,12 +1054,12 @@ if [ "${ARCH}" = "i686" ]; then
          [ "${temp_arch}"="auto" ] && temp_arch="${ARCH}"
          temp_pkg=`grep "${pkgname}-${pkgver}-${temp_arch}-${pkgbuild}.txz" "${startdir}"/install_list.${main_pkgname}`
          show_message CONVERTS_PACKAGE_TO_X86_64 ${temp_pkg}
-         `mkpkg_32to64 "${temp_pkg}"`
+         mkpkg_32to64 "${temp_pkg}"
       else
          if [ -n "$(echo ${tags} | grep -w 'x86')" ]; then
             temp_pkg=`grep "${pkgname}-${pkgver}-${temp_arch}-${pkgbuild}.txz" "${startdir}"/install_list.${main_pkgname}`
             show_message CONVERTS_PACKAGE_TO_X86_64 ${temp_pkg}
-            `/usr/bin/mkpkg_make64 "${temp_pkg}"`
+            /usr/bin/mkpkg_make64 "${temp_pkg}"
          fi
       fi
   done
