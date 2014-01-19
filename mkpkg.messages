@@ -788,36 +788,36 @@ esac;;
 REPLACING_TAGS*)###################################################
 ############
 case $lang in
-ru) echo -e "Замена тегов";;
-uk) echo -e "Заміна тегів";;
-*) echo -e "Replacing tags";;
+ru) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Замена тегов\e[0m\e[0m";;
+uk) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Заміна тегів\e[0m\e[0m";;
+*) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Replacing tags\e[0m\e[0m";;
 esac;;
 
 ##########
 PACKING_BACK*)###################################################
 ############
 case $lang in
-ru) echo -e "Упаковка пакета обратно";;
-uk) echo -e "Упаковка пакету назад";;
-*) echo -e "Packing package back";;
+ru) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Упаковка пакета обратно\e[0m\e[0m";;
+uk) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Упаковка пакету назад\e[0m\e[0m";;
+*) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Packing package back\e[0m\e[0m";;
 esac;;
 
 ##########
 MODIFYING_DEPS*)###################################################
 ############
 case $lang in
-ru) echo -e "Модификация зависимостей";;
-uk) echo -e "Модифікація залежностей";;
-*) echo -e "Modifying dependence";;
+ru) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Модификация зависимостей\e[0m\e[0m";;
+uk) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Модифікація залежностей\e[0m\e[0m";;
+*) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Modifying dependence\e[0m\e[0m";;
 esac;;
 
 ##########
 MODIFYING_METADATA*)###################################################
 ############
 case $lang in
-ru) echo -e "Модификация метаданных";;
-uk) echo -e "Модифікація метаданих";;
-*) echo -e "Modifying metadata";;
+ru) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Модификация метаданных\e[0m\e[0m";;
+uk) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Модифікація метаданих\e[0m\e[0m";;
+*) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Modifying metadata\e[0m\e[0m";;
 esac;;
 
 ##########
@@ -833,9 +833,9 @@ esac;;
 DELETE_TEMPORARY_FILES*)###################################################
 ############
 case $lang in
-ru) echo -e "Удаление временных файлов";;
-uk) echo -e "Видалення тимчасових файлів";;
-*) echo -e "Delete temporary files";;
+ru) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Удаление временных файлов\e[0m\e[0m";;
+uk) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Видалення тимчасових файлів\e[0m\e[0m";;
+*) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]===Delete temporary files\e[0m\e[0m";;
 esac;;
 
 ##########

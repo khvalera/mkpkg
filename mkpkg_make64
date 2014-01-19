@@ -40,7 +40,7 @@ make_pkg64() {
   ( cd "${orig_dir}" ; tar -xf "${PKG_FULLPATH}" )
   # Copy metadata
   mkdir ${dest_dir}/install
-  cp ${orig_dir}/install/data.xml ${dest_dir}/install/data.xml
+  cp -r ${orig_dir}/* ${dest_dir}
   pkginfo="$(mkpkg_xml_parser ${dest_dir}/install/data.xml -p)"
   pkgname=`echo ${pkginfo} | cut -d ' ' -f 1`
   pkgver=`echo ${pkginfo} | cut -d ' ' -f 2`
@@ -52,17 +52,21 @@ make_pkg64() {
   fi
 
   show_message REPLACING_TAGS
-  replace_tags ${orig_dir}
+  replace_tags
 
   show_message MODIFYING_METADATA
-  modify_meta ${orig_dir}
+  modify_meta
 
   show_message MODIFYING_DEPS
-  modify_deps ${orig_dir}
+  modify_deps
 
   show_message PACKING_BACK
   # Package it and move to packages directory
-  ( cd ${orig_dir} ; buildpkg ${package_out_dir}/ )
+  ( cd ${dest_dir} ; buildpkg ${package_out_dir}/ )
+  if [ "${NOT_CLEAR_SOURCE}" != "1" ]; then
+     show_message DELETE_TEMPORARY_FILES
+     rm -fr "${wd}"
+  fi
   set +e
 }
 
@@ -139,14 +143,12 @@ modify_deps() {
 }
 
 modify_meta() {
-  dest_dir="$1"
   mpkg-setmeta ${dest_dir} --arch=x86_64
 
   return 0
 }
 
 replace_tags() {
-  dest_dir="$1"
   echo "DEST: ${dest_dir}"
   # Modify metadata
   # Tags

@@ -98,8 +98,10 @@ make_compat32() {
   show_message PACKING_BACK
   # Package it and move to packages directory
   ( cd ${dest_dir} ; buildpkg ${package_out_dir}/ )
-  show_message DELETE_TEMPORARY_FILES
-  rm -fr "${wd}"
+  if [ "${NOT_CLEAR_SOURCE}" != "1" ]; then
+     show_message DELETE_TEMPORARY_FILES
+     rm -fr "${wd}"
+  fi
   set +e
 }
 

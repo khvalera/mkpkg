@@ -185,7 +185,7 @@ set_options(){
   while [ ! -z "$1" ]; do
         case $1 in
                  -nc|--no-cleanup)
-                        NOT_CLEAR_SOURCE=1
+                        export NOT_CLEAR_SOURCE=1
                         ;;
                  -fr|--force-root)
                         FORCE_ROOT=1
