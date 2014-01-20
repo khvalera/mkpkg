@@ -8,7 +8,7 @@
 # 
 
 # This is cool software, so it has version!
-MKPKG_VER=1.3.3_git20140119
+MKPKG_VER=%MKPKG_VER%
 
 # FIXME: this string should be replaced during CMake build
 MKPKG_INSTALL_PREFIX=/usr
