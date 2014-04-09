@@ -53,3 +53,20 @@ check_dir_whitelist() {
 
  return ${bad}
 }
+
+#Query function
+ask_yn() {
+  local pressed_key
+  if [ -n "$1" ] ; then
+     message_text=`show_message $1`
+     read -n 1 -p "${message_text} (y/[a]): " pressed_key
+  else
+     read -n 1 pressed_key
+  fi
+  echo "" 1>&2
+  if [ "${pressed_key}" = "y" ] ; then
+     return 0
+  else
+     return 1
+  fi
+}
