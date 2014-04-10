@@ -42,12 +42,12 @@ make_pkg64() {
   mkdir ${dest_dir}/install
   cp -r ${orig_dir}/* ${dest_dir}
   pkginfo="$(mkpkg_xml_parser ${dest_dir}/install/data.xml -p)"
-  pkgname=`echo ${pkginfo} | cut -d ' ' -f 1`
-  pkgver=`echo ${pkginfo} | cut -d ' ' -f 2`
-  pkgbuild=`echo ${pkginfo} | cut -d ' ' -f 4`
-  pkgarch=`echo ${pkginfo} | cut -d ' ' -f 3`
-  if [ ${pkgarch} != "i686" ]; then
-     show_message INCORRECT_ARCH_PACKAGE "${pkgarch}" "${PKGNAME}"
+  tpkgname=`echo ${pkginfo} | cut -d ' ' -f 1`
+  tpkgver=`echo ${pkginfo} | cut -d ' ' -f 2`
+  tpkgbuild=`echo ${pkginfo} | cut -d ' ' -f 4`
+  tpkgarch=`echo ${pkginfo} | cut -d ' ' -f 3`
+  if [ ${tpkgarch} != "i686" ]; then
+     show_message INCORRECT_ARCH_PACKAGE "${tpkgarch}" "${PKGNAME}"
      exit
   fi
 
