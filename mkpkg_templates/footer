@@ -1,7 +1,4 @@
 
-
-#ran after function build()
-#после сборки
 #after_build(){
-
+#  go_src_dir
 #}

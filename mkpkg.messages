@@ -911,12 +911,12 @@ uk) echo -e "У ABUILD не вказано тег \e[1;31m$2\e[0m!!!";;
 esac;;
 
 ##########
-EXECUTION_OF_FUNCTIONS*)###################################################
+EXECUTION_OF_FUNCTION*)###################################################
 ############
 case $lang in
-ru) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Выполнение функций : \e[34m$2\e[0m\e[0m";;
-uk) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Выполнение функций : \e[34m$2\e[0m\e[0m";;
-*) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Execution of functions : \e[34m$2\e[0m\e[0m\e[0m";;
+ru) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Выполнение функции : \e[34m$2\e[0m\e[0m";;
+uk) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Выполнение функциї : \e[34m$2\e[0m\e[0m";;
+*) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Execution of function : \e[34m$2\e[0m\e[0m\e[0m";;
 esac;;
 
 ##########
@@ -944,6 +944,24 @@ case $lang in
 ru) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Запуск скрипта преобразования пакета $2 в x86_64\e[0m";;
 uk) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Запуск скрипта перетворення пакету $2 у x86_64\e[0m";;
 *) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Start script converts package $2 to x86_64\e[0m";;
+esac;;
+
+##########
+CHANGE_VERSION_PACKAGE*)###################################################
+############
+case $lang in
+ru) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Изменение текущей версии в ABUILD на $2\e[0m";;
+uk) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Зміна поточної версії в ABUILD на $2\e[0m";;
+*) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Changing of current versions of ABUILD on $2\e[0m";;
+esac;;
+
+##########
+CHANGE_BUILD_PACKAGE*)###################################################
+############
+case $lang in
+ru) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Изменение текущей версии сборки в ABUILD на $2\e[0m";;
+uk) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Зміна поточної версії збірки в ABUILD на $2\e[0m";;
+*) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Changing current version builds on ABUILD to $2\e[0m";;
 esac;;
 
 ######################end

@@ -39,7 +39,7 @@ fi
 
 #check mode for bt_working dir
 wdm_check() {
-  show_message EXECUTION_OF_FUNCTIONS "wdm_ckeck()"
+  show_message EXECUTION_OF_FUNCTION "wdm_ckeck()"
   case ${work_dir_mode} in
        remote)
              USE_REMOTE=1
@@ -71,7 +71,7 @@ fi
 
 #get maintainer name and email from mpkg
 get_maintainer() {
-  show_message EXECUTION_OF_FUNCTIONS "get_maintainer()"
+  show_message EXECUTION_OF_FUNCTION "get_maintainer()"
   mn=$(mpkg-maintainer --show | grep 'MaintainerName: ' | cut -d ':' -f2 | cut -b2-)
   me=$(mpkg-maintainer --show | grep 'MaintainerEmail: ' | cut -d ':' -f2 | cut -b2-)
   export mn
@@ -85,7 +85,7 @@ get_maintainer() {
 
 #check config file
 check_config() {
-  show_message EXECUTION_OF_FUNCTIONS "check_config()"
+  show_message EXECUTION_OF_FUNCTION "check_config()"
   local bad=0
   if [ -f /etc/mkpkg.conf ]; then
      . /etc/mkpkg.conf
@@ -134,7 +134,7 @@ check_config() {
 
 #check dir from config file for existance and permissions
 check_remote_dirs() {
-  show_message EXECUTION_OF_FUNCTIONS "check_remote_dirs()"
+  show_message EXECUTION_OF_FUNCTION "check_remote_dirs()"
   local bad=0
   if [ ! -d "${bt_working_dir}" ]; then
      mkdir -p "${bt_working_dir}" || bad=1
@@ -174,7 +174,7 @@ check_remote_dirs() {
 
 #command line options parser
 set_options(){
-  show_message EXECUTION_OF_FUNCTIONS "set_options()"
+  show_message EXECUTION_OF_FUNCTION "set_options()"
   startdir="$(pwd)"
   REAL_CWD="${startdir}"
   if [ "${use_cache_dir}" == "yes" ]; then
@@ -341,7 +341,7 @@ set_options(){
 }
 
 copy_abuild() {
-  show_message EXECUTION_OF_FUNCTIONS "copy_abuild()"
+  show_message EXECUTION_OF_FUNCTION "copy_abuild()"
   if [ -f "${startdir}/ABUILD" ]; then
      ask_yn "OVERWRITE_FILE ${startdir}/ABUILD" || exit 0
   fi
@@ -411,7 +411,7 @@ bt_path(){
 
 #check build tree
 check_build_tree() {
-  show_message EXECUTION_OF_FUNCTIONS "check_build_tree()"
+  show_message EXECUTION_OF_FUNCTION "check_build_tree()"
   local pkg_file="$1"
   if [ -z "${pkg_file}" ]; then
      show_message FILE_NOT_FOUND "some_package_build_tree"
@@ -446,7 +446,7 @@ check_build_tree() {
 
 #unpack build tree archive from pkg file
 unpack_build_tree_from_pkg() {
-  show_message EXECUTION_OF_FUNCTIONS "unpack_build_tree_from_pkg() $1"
+  show_message EXECUTION_OF_FUNCTION "unpack_build_tree_from_pkg() $1"
 
   local victim=${1}
   if [ -z "$victim" ]; then
@@ -491,8 +491,8 @@ unpack_build_tree_from_pkg() {
 
 #prepare work dir
 prepare_work_dir() {
-  show_message EXECUTION_OF_FUNCTIONS "prepare_work_dir() ${prefix}"
   local prefix="$1"
+  show_message EXECUTION_OF_FUNCTION "prepare_work_dir() ${prefix}"
   mkpkg_lockfile="/tmp/mkpkg_${tmp_pkg_name}.lock"
 
   if [ "$(check_lock_file)" == "1" ]; then
@@ -533,11 +533,10 @@ check_mopsbuild() {
 
 #prepare working stuff in work dir
 prepare_abuild() {
-  show_message EXECUTION_OF_FUNCTIONS "prepare_abuild()"
+  show_message EXECUTION_OF_FUNCTION "prepare_abuild()"
   tmp_pkg_name=
   local tmp_workdir=
   if [ "${BT_BUILD}" == "1" ]; then
-     d_echo "prepare_abuild() with BT_BUILD=1"
      local local_bt="$(basename ${BT_FILE})"
      tmp_pkg_name="$(echo ${local_bt} | sed -e s,\.build_tree.tar.xz,,)"
      tmp_workdir="${bt_working_dir}/${tmp_pkg_name}"
@@ -546,7 +545,6 @@ prepare_abuild() {
      tar xf "${BT_FILE}"
      check_mopsbuild "${tmp_workdir}"
      startdir="${tmp_workdir}"
-     show_message WORK_DIR "${startdir}"
      bumper "${startdir}"
      check_deprecated_vars "${startdir}"
   else
@@ -557,18 +555,14 @@ prepare_abuild() {
      fi
 
      if [ "${USE_REMOTE}" == "1" ]; then
-        d_echo "prepare_abuild() with USE_REMOTE=1"
         tmp_workdir="${bt_working_dir}/${tmp_pkg_name}"
         prepare_work_dir "${tmp_workdir}"
         startdir="${tmp_workdir}"
-        show_message WORK_DIR "$startdir"
         bumper "${REAL_CWD}"
         check_deprecated_vars "${REAL_CWD}"
         for i in ABUILD CHANGELOG files slack-desc patches doinst.sh.gz doinst.sh postremove.sh preremove.sh; do
             cp -a "$(pwd)"/$i "${startdir}" 2>/dev/null
         done
-
-        # bumper "${startdir}"
      else
         bumper "${startdir}"
         check_deprecated_vars "${startdir}"
@@ -606,13 +600,14 @@ bumper() {
      let "_curr_pkg_build+=1" 2>/dev/null || show_message CANT_INCREMENT_BUILD "${_curr_pkg_build}"
      BUMP_BUILD=${_curr_pkg_build}
   fi
-  d_echo "bumper(): bump version or build in ${abuild_path}/ABUILD [${BUMP_VERSION}:${BUMP_BUILD}]"
   if [ -n "${BUMP_VERSION}" ]; then
      sed -i "0,/^pkgver=.*/s/^pkgver=.*/pkgver=$BUMP_VERSION/" "${abuild_path}"/ABUILD || exit 1
+     show_message CHANGE_VERSION_PACKAGE $BUMP_VERSION
   fi
 
   if [ -n "${BUMP_BUILD}" ]; then
      sed -i "0,/^pkgbuild=.*/s/^pkgbuild=.*/pkgbuild=$BUMP_BUILD/" "${abuild_path}"/ABUILD || exit 1
+     show_message CHANGE_BUILD_PACKAGE $BUMP_BUILD
   fi
 }
 
@@ -630,7 +625,7 @@ get_pkg_name() {
 #captain obvious to rescue...
 check_deprecated_vars() {
   local abuild_path="$1"
-  show_message EXECUTION_OF_FUNCTIONS "check_deprecated_vars() in ${abuild_path}/ABUILD"
+  show_message EXECUTION_OF_FUNCTION "check_deprecated_vars() in ${abuild_path}/ABUILD"
   if [ -n "$(cat "${abuild_path}/ABUILD" | grep '^author')" ]; then
      show_message DEPRECATED_VAR author
      sed -i "s/^author=/#author=/g" "${abuild_path}"/ABUILD
@@ -654,27 +649,22 @@ check_deprecated_vars() {
   show_message END_FUNCTION "check_deprecated_vars() in ${abuild_path}/ABUILD"
 }
 
-#########################
-# end of function block #
-#########################
-#--------------------------------------------------
-##########################
-# begin of checker block #
-##########################
-
 #check abuild for commom errors
 check_abuild() {
-  show_message EXECUTION_OF_FUNCTIONS "${startdir}/ABUILD"
+  show_message EXECUTION_OF_FUNCTION "check_abuild()"
   . "${startdir}"/ABUILD
   #check main vars are present
-  local main_vars="pkgname pkgver pkgbuild arch tags"
-  if [ "$(check_var_set main_vars)" == "1" ]; then 
+  local main_vars="pkgname pkgver pkgbuild arch tags build_deps"
+  local bad_var_set="$(check_var_set "${main_vars}")"
+  if [ "${bad_var_set}" != "" ]; then
+     show_message VAR_NOT_SET "${bad_var_set}"
      exit 1
   fi
 
   #check for description presence
-  local desc_vars="shortdesc longdesc"
-  if [ "$(check_var_set desc_vars)" == "1" -a ! -e "${startdir}/slack-desc" ]; then
+  local desc_vars="shortdesc"
+  local bad_var_set="$(check_var_set "${desc_vars}")"
+  if [ "${bad_var_set}" != "" -a ! -e "${startdir}/slack-desc" ]; then
      show_message NO_DESC
      exit 1
   fi
@@ -682,7 +672,8 @@ check_abuild() {
   #does build() exist?
   if [ ! "$(grep ^build\(\) "${startdir}"/ABUILD)" ]; then 
      local build_vars="BUILD_SYSTEM BUILD_KEYS"
-     if [ "$(check_var_set ${build_vars})" == "1" ]; then
+     local bad_var_set="$(check_var_set "${build_vars}")"
+     if [ "${build_vars}" != "" ]; then
         show_message NO_BUILD_FUNC
         exit 1
      fi
@@ -719,7 +710,7 @@ check_abuild() {
        fi
        if [ -n "${dep_ver}" -a -n "${system_pkg_ver}" ];then
           local cmp_bad=0
-          case `mkpkg_vercmp $dep_ver $system_pkg_ver` in
+          case `mpkg-vercmp $dep_ver $system_pkg_ver` in
                -1)
                     if [ ! "${sign}" = ">" -a ! "${sign}" = ">=" ]; then
                        cmp_bad=1
@@ -759,25 +750,24 @@ check_abuild() {
   if [ "${bad}" == "1" ]; then
      exit 1
   fi
-  show_message END_FUNCTION "${startdir}/ABUILD"
+  show_message END_FUNCTION "check_abuild()"
 }
 
 #check set of vars for existance
 check_var_set() {
   local vars_to_check=$1
-  local bad_var_set=0
+  local bad_var_set
   for lv in ${vars_to_check}; do
       if [ ! "${!lv}" ]; then
-         show_message VAR_NOT_SET $lv
-         bad_var_set=1
+         bad_var_set="${bad_var_set} ${lv}"
       fi
   done
-  echo "${bad_var_set}"
+  echo "$(echo ${bad_var_set})"
 }
 
 #what is this function about, hmmm?
 check_arch() {
-  show_message EXECUTION_OF_FUNCTIONS "check_arch() with ${checked_arch} ${checked_pkg}"
+  show_message EXECUTION_OF_FUNCTION "check_arch() with ${checked_arch} ${checked_pkg}"
   local checked_arch=$1
   local checked_pkg=$2
   local real_arch=
@@ -826,7 +816,7 @@ arch_type() {
 }
 
 check_desc() {
-  show_message EXECUTION_OF_FUNCTIONS "check_desc() for ${startdir}/${pkgname}/install"
+  show_message EXECUTION_OF_FUNCTION "check_desc() for ${startdir}/${pkgname}/install"
   local desc_dir="${startdir}/${pkgname}/install"
   mkdir -p "${desc_dir}" || exit 1
   if [ -z "${shortdesc}" ]; then
@@ -854,15 +844,6 @@ check_desc() {
   show_message END_FUNCTION "check_desc() for ${startdir}/${pkgname}/install"
 }
 
-check_builddeps(){
-  show_message EXECUTION_OF_FUNCTIONS "check_builddeps() for ${startdir}/${pkgname}/install"
-  if [ -z "${build_deps}" ]; then
-       show_message NO_BUILDDEPS
-       exit 1
-  fi
-  show_message END_FUNCTION "check_builddeps() for ${startdir}/${pkgname}/install"
-}
-
 show_bad_letter() {
   local desc_str="$1"
   local position=$2
@@ -874,7 +855,7 @@ show_bad_letter() {
 
 
 check_tags() {
-  show_message EXECUTION_OF_FUNCTIONS "check_tags() ${pkgname}"
+  show_message EXECUTION_OF_FUNCTION "check_tags() ${pkgname}"
   local long=0
   local short=0
   local bad=0
@@ -933,7 +914,6 @@ check_sequence() {
   check_arch ${arch} ${checked_pkg}
   check_desc
   check_tags "${tags}"
-  check_builddeps
   check_provides
 }
 
@@ -952,23 +932,24 @@ not_root
 prepare_abuild
 cat <<"AGB_HEADER" >"${startdir}/${tmp_pkg_name}.AgiliaBuild"
 #!/bin/bash
-######################################################################################
-###################### Start AgiliaBuild #############################################
-########## Set Function and Vars Определение функций и переменных ####################
-######################################################################################
-########################## !!! WARNING !!! ВНИМАНИЕ !!! ##############################
-#This is an automatically generated script. Basic things like package name, version  #
-#and other was taken from ABUILD file. All other functions are located in mkpkg      #
-#script. If you find any error or can offer any impovment, feel free to mail us!     #
-#                                    ###                                             #
-#Это автоматически сгенерированный скрипт. Базовые вещи, такие как имя, версия пакетa#
-#и прочие вещи взяты из файла ABUILD. Все прочие функции назодятся в файле mkpkg     #
-#Если вы нашли какую-либо ошибку или у вас есть предложение по улучшению - пишите нам#
-#                                    ###                                             #
-#Contacts/Контакты:  								     #
-#forum thread:  http://forum.agilialinux.ru/viewtopic.php?id=73    (rus eng)       #
-######################################################################################
- 
+########################################################################################
+################################## Start AgiliaBuild ###################################
+########################################################################################
+############################ !!! WARNING !!! ВНИМАНИЕ !!! ##############################
+# This is an automatically generated script. Basic things like package name, version   #
+# and other was taken from ABUILD file. All other functions are located in mkpkg       #
+# script. If you find any error or can offer any impovment, feel free to mail us!      #
+# ------------------------------------------------------------------------------------ #
+# Это автоматически сгенерированный скрипт. Базовые вещи, такие как имя, версия пакетa #
+# и прочие вещи взяты из файла ABUILD. Все прочие функции находятся в файле mkpkg      #
+# Если вы нашли какую-либо ошибку или у вас есть предложение по улучшению - пишите нам!#
+# ------------------------------------------------------------------------------------ #
+# Contacts/Контакты                                                                    #
+# forum : http://forum.agilialinux.ru/viewtopic.php?id=73    (rus ukr eng)             #
+# wiki  : http://wiki.agilialinux.ru/packages/ru/mkpkg                                 #
+# git   : https://github.com/aix27249/mkpkg                                            #
+########################################################################################
+
 ############################ Set Vars Начальные переменные ###########################
 AGB_HEADER
 echo "startdir=\"${startdir}\"" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
@@ -1000,16 +981,12 @@ echo "mn=${mn}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
 echo "me=${me}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
 echo "PARENT_ONLY=${PARENT_ONLY}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
 echo "numjobs=${numjobs}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
-
-
-#so.... let_s check that yours abuild
 check_abuild
 check_arch ${arch}
 echo "build_exists=${build_exists}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
 echo "USE_CUSTOM=${USE_CUSTOM}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
 echo "ARCH=${ARCH}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
 echo "LIBDIRSUFFIX=${LIBDIRSUFFIX}" >> "$startdir/${tmp_pkg_name}.AgiliaBuild"
-
 #check_deprecated_vars ${startdir}
 r_pkgname=${pkgname}
 p_pkgname=${pkgname}

@@ -5,7 +5,8 @@ case $1 in
 MKPKG_START*)
 #######
 case $lang in
-ru) mmsg "Запускается mkpkg версия $2";;
+ru) mmsg "Запускается mkpkg версии $2";;
+uk) mmsg "Запускається mkpkg версії $2";;
 *) mmsg "Starting mkpkg version $2";;
 esac;;
 
@@ -15,5 +16,5 @@ esac
 }
 
 mmsg() {
-echo -e "\e[0;32m ${1} \e[0m"
+  echo -e "\e[0;32m ${1} \e[0m"
 }
