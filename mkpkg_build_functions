@@ -1,4 +1,5 @@
 #!/bin/bash
+
 . "${startdir}"/ABUILD
 
 r_startdir="${startdir}"
@@ -606,91 +607,97 @@ install_desktop_and_pixmap() {
 }
 
 create_package() {
-	d_echo "create package in ${pkgdir}"
-	cd "$pkgdir"
-	local sdescfile="/tmp/sdescfile.${RANDOM}"
-	local ldescfile="/tmp/ldescfile.${RANDOM}"
-	echo "${shortdesc}"> "${sdescfile}"
-	if [ -n "${longdesc}" ]; then 
-		echo "${longdesc}"> "${ldescfile}"
-	else 
-		if [ -n "${p_longdesc}" ]; then 
-			echo "${p_longdesc}"> "${ldescfile}"
-		fi
-	fi
-	if [ -e "${ldescfile}" ]; then 
-		META_OPTIONS+=" --longdesc=${ldescfile}"
-	fi
-	
-	META_OPTIONS+=" --shortdesc=${sdescfile// /\ }"
-	mkdir -p "${pkgdir}/install" || exit 1 
-	mpkg-setmeta "${pkgdir}" $META_OPTIONS || exit 1 #1530
-	set +e
-	rm -r "${ldescfile}" "${sdescfile}"  2>/dev/null
-	set -e
-	if [ "${SKIP_GENDEPS}" != "1" ]; then 
-		if [ -n "${gendeps_blacklist}" ]; then
-			local black_file="${startdir}"/deps_blacklist-${RANDOM}
-			for i in ${gendeps_blacklist};do
-				echo $i >> "${black_file}"
-			done
-			local black_opts=" -E \"${black_file}\""
-		fi
-		mpkg -G -P ${black_opts} gendeps2 "${pkgdir}" || exit 1
-		if [ -n "${black_file}" ]; then
-			rm -f "${black_file}"
-		fi
-	fi
-	mpkg-setmeta "${pkgdir}" $DELDEP
-	# Add deps without duplication
-	local pkg_deps="$(mkpkg_xml_parser ${pkgdir}/install/data.xml -d)"
-	for dep in ${pkg_deps// / }; do
-		dep_name_str+="$(echo ${dep} | sed 's/[>=<!].*//g') "
-	done
-	ADDDEP=""
-	if [ -n "${adddep}" ]; then
-		for dep in ${adddep// / }; do
-			local find_deps=`echo "${dep_name_str}" | grep -w "$(echo ${dep} | sed 's/[>=<!].*//g')"`
-			if [ -z "${find_deps}" ]; then
-				ADDDEP+="--add-dep=${dep} "
-			fi
-		done
-	fi
-	mpkg-setmeta "${pkgdir}" $ADDDEP
-	
-	# Configuration files import
-	if [ -n "${config_files}" ] ; then
-		local config_files_file="${startdir}/config_files-${RANDOM}"
-		echo "$config_files" > "$config_files_file"
-		mpkg-setmeta "${pkgdir}" -f "${config_files_file}"
-		# Now, we need to move files
-		for c_file in `cat ${config_files_file} | grep -v '^ *$' | sed -e 's/\([^\\]\) .*/\1/'` ; do 
-			echo "moving ${c_file} to ${c_file}.new"
-			mv "${pkgdir}/${c_file}" "${pkgdir}/${c_file}.new"
-		done
-		rm "${config_files_file}"
-		unset config_files
-	fi
-	make_build_tree 
-	#я сидел в двух футболках, когда писал этот код
-	local out_dir=
-	if [ "$USE_REMOTE" = "1" ]; then 
-		out_dir="$package_out_dir"
-	else
-		out_dir="${startdir}"
-	fi
-	local package="${pkgname}-${pkgver//-/_}-${ARCH}-${pkgbuild//-/_}"
-	d_echo "create_package : ${out_dir}/${package}.txz"
-	/sbin/makepkg -l n -c n -p "${out_dir}/${package}.txz" || exit 1
-	echo "${out_dir}/${package}.txz" >> "${install_list}"
-	if [ "${SKIP_VALIDATE}" != 1 ]; then
-		mpkg-validate "${out_dir}/$package.txz" || exit 1
-		val_size=`du ${out_dir}/$package.txz.validate --apparent-size -h | cut -f1`
-			if [ "$val_size" = "19" ]; then
-				rm -f "${out_dir}/$package.txz.validate"
-			fi
-	fi
-	d_echo "done create package"
+  show_message CREATE_PACKAGE_IN "${pkgdir}"
+  cd "${pkgdir}"
+  local sdescfile="/tmp/sdescfile.${RANDOM}"
+  local ldescfile="/tmp/ldescfile.${RANDOM}"
+  echo "${shortdesc}"> "${sdescfile}"
+  if [ -n "${longdesc}" ]; then 
+     echo "${longdesc}"> "${ldescfile}"
+  else
+     if [ -n "${p_longdesc}" ]; then 
+        echo "${p_longdesc}"> "${ldescfile}"
+     fi
+  fi
+  if [ -e "${ldescfile}" ]; then 
+     META_OPTIONS+=" --longdesc=${ldescfile}"
+  fi
+
+  META_OPTIONS+=" --shortdesc=${sdescfile// /\ }"
+  mkdir -p "${pkgdir}/install" || exit 1 
+  mpkg-setmeta "${pkgdir}" $META_OPTIONS || exit 1 #1530
+  set +e
+  rm -r "${ldescfile}" "${sdescfile}"  2>/dev/null
+  set -e
+  if [ "${SKIP_GENDEPS}" != "1" ]; then 
+     if [ -n "${gendeps_blacklist}" ]; then
+        local black_file="${startdir}"/deps_blacklist-${RANDOM}
+        for i in ${gendeps_blacklist};do
+            echo $i >> "${black_file}"
+        done
+        local black_opts=" -E \"${black_file}\""
+     fi
+     mpkg -G -P ${black_opts} gendeps2 "${pkgdir}" || exit 1
+     if [ -n "${black_file}" ]; then
+        rm -f "${black_file}"
+     fi
+  fi
+  mpkg-setmeta "${pkgdir}" $DELDEP
+  # Add deps without duplication
+  local pkg_deps="$(mkpkg_xml_parser ${pkgdir}/install/data.xml -d)"
+  for dep in ${pkg_deps// / }; do
+      dep_name_str+="$(echo ${dep} | sed 's/[>=<!].*//g') "
+  done
+  ADDDEP=""
+  if [ -n "${adddep}" ]; then
+     for dep in ${adddep// / }; do
+         dep="$(echo ${dep} | sed 's/[>=<!].*//g')"
+         found_dep='no';
+         for dep_str in ${dep_name_str// / }; do
+             dep_str="$(echo ${dep_str} | sed 's/[>=<!].*//g')"
+             if [ "$dep_str" = "${dep}" ]; then
+                found_dep='yes';
+             fi
+         done
+         if [ "${found_dep}" = "no" ]; then
+            ADDDEP+="--add-dep=${dep} "
+         fi
+     done
+  fi
+  mpkg-setmeta "${pkgdir}" $ADDDEP
+
+  # Configuration files import
+  if [ -n "${config_files}" ] ; then
+     local config_files_file="${startdir}/config_files-${RANDOM}"
+     echo "$config_files" > "$config_files_file"
+     mpkg-setmeta "${pkgdir}" -f "${config_files_file}"
+     # Now, we need to move files
+     for c_file in `cat ${config_files_file} | grep -v '^ *$' | sed -e 's/\([^\\]\) .*/\1/'` ; do 
+         echo "moving ${c_file} to ${c_file}.new"
+         mv "${pkgdir}/${c_file}" "${pkgdir}/${c_file}.new"
+     done
+     rm "${config_files_file}"
+     unset config_files
+  fi
+  make_build_tree
+  local out_dir=
+  if [ "$USE_REMOTE" = "1" ]; then 
+     out_dir="$package_out_dir"
+  else
+     out_dir="${startdir}"
+  fi
+  local package="${pkgname}-${pkgver//-/_}-${ARCH}-${pkgbuild//-/_}"
+  d_echo "create_package : ${out_dir}/${package}.txz"
+  /sbin/makepkg -l n -c n -p "${out_dir}/${package}.txz" || exit 1
+  echo "${out_dir}/${package}.txz" >> "${install_list}"
+  if [ "${SKIP_VALIDATE}" != 1 ]; then
+     mpkg-validate "${out_dir}/$package.txz" || exit 1
+     val_size=`du ${out_dir}/$package.txz.validate --apparent-size -h | cut -f1`
+     if [ "$val_size" = "19" ]; then
+        rm -f "${out_dir}/$package.txz.validate"
+     fi
+  fi
+  show_message DONE_CREATE_PACKAGE
 }
 
 gen_meta_options(){

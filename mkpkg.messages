@@ -964,6 +964,24 @@ uk) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Зміна поточної вер�
 *) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Changing current version builds on ABUILD to $2\e[0m";;
 esac;;
 
+##########
+CREATE_PACKAGE_IN*)###################################################
+############
+case $lang in
+ru) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Cоздание пакета в $2\e[0m";;
+uk) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Створення пакета в $2\e[0m";;
+*) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Create package in $2\e[0m";;
+esac;;
+
+##########
+DONE_CREATE_PACKAGE*)###################################################
+############
+case $lang in
+ru) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Завершено создание пакета \e[0m";;
+uk) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Завершено створення пакету \e[0m";;
+*) echo -e "\e[42m\e[37m===[MKPKG_DEBUG]=== Done create package \e[0m";;
+esac;;
+
 ######################end
 *)
 echo -e "Unknown string $1"; exit 1
