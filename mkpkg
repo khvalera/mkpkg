@@ -673,7 +673,7 @@ check_abuild() {
   if [ ! "$(grep ^build\(\) "${startdir}"/ABUILD)" ]; then 
      local build_vars="BUILD_SYSTEM BUILD_KEYS"
      local bad_var_set="$(check_var_set "${build_vars}")"
-     if [ "${build_vars}" != "" ]; then
+     if [ "${bad_var_set}" != "" ]; then
         show_message NO_BUILD_FUNC
         exit 1
      fi
