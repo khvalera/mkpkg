@@ -88,7 +88,6 @@ get_extract_source() {
               cd "${srcache}"
               if [ ! ${ext_arg} ];then 
                  item=$(echo "$item" | sed 's/^git:*//')
-                 echo "$git_commit --- $item"
                  if [ ! -d "${pkgname}_git_${loc_source}.src" ]; then
                     git clone $item "${pkgname}_git_${loc_source}.src"
                  else
