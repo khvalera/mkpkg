@@ -18,150 +18,155 @@ pkgdir="${p_pkgdir}"
 #==================================
 # begin prepare block
 #==================================
-
 get_extract_source() {
-	if [ -n "${source}" ]; then 
-		d_echo "source processing"
-		mkdir -p "${srcdir}"
-		for it in `seq 0 $((${#source[@]}-1))`; do
-			if [ -z "${_first}" ]; then
-				_first="first"
-			else
-				_first="second"
-			fi
-			set -- ${source[it]}
-			item=$1
-			d_echo "   item ${item}"
-			local ifn=""
-			#FIXME коряво сделан разбор опций. Надо бы поправить.
-			if [ "$2" == "n" -o "$3" == "n" ]; then
-				#do not unpack
-				ifn=n
-			fi
-			cd "$scrache"
+  if [ -n "${source}" ]; then 
+     d_echo "source processing"
+     mkdir -p "${srcdir}"
+     for it in `seq 0 $((${#source[@]}-1))`; do
+         if [ -z "${_first}" ]; then
+            _first="first"
+         else
+            _first="second"
+         fi
+         set -- ${source[it]}
+         item=$1
+         d_echo "   item ${item}"
+         local ifn=""
+         #FIXME коряво сделан разбор опций. Надо бы поправить.
+         if [ "$2" == "n" -o "$3" == "n" ]; then
+            #do not unpack
+            ifn=n
+         fi
+         cd "${scrache}"
 
-			cd "$srcdir" || exit 1
-			loc_source=$(basename "$item")
+         cd "${srcdir}" || exit 1
+         git_commit=`echo "${item}" | grep "#commit=" | sed -e 's|.*#commit=||'`
+         item=`echo "${item}" | sed -e 's|#commit=.*||'`
 
-			if [ "$2" == "o" -o "$3" == "o" ]; then
-				#overwrite anyway
-				rm -rf "${srcache}/${loc_source}"
-				rm -rf "${srcache}/${loc_source}.part"
-			fi
+         loc_source=$(basename "$item")
 
-			loc_source_arr[${#loc_source_arr[@]}]="${loc_source}"
-			loc_source_files+="$(basename ${loc_source}) "
+         if [ "$2" == "o" -o "$3" == "o" ]; then
+            #overwrite anyway
+            rm -rf "${srcache}/${loc_source}"
+            rm -rf "${srcache}/${loc_source}.part"
+         fi
 
-			if [ -f "${srcache}/$loc_source" ]; then
-					item="$loc_source"
-			fi
+         loc_source_arr[${#loc_source_arr[@]}]="${loc_source}"
+         loc_source_files+="$(basename ${loc_source}) "
 
-			local protocol=$(echo "$item" | sed 's|:.*||')
-			d_echo "   Discover source file ${item} download protocol as '$protocol'"
-			case $protocol in
-				http|ftp|https)
-					if [ ! "${ext_arg}" ]; then
-						wget -c --no-check-certificate ${wgetopts} -O "${srcache}/${loc_source}".part $item  || exit 1
-						mv "${srcache}/${loc_source}".part "${srcache}/${loc_source}"
-						if [ ! "$ifn" = "n" ]; then
-							unpack "${srcache}/$loc_source"  || exit 1
-						fi
-					fi
-					;;
-				svn)
-					cd "${srcache}"
-					if [ ! ${ext_arg} ]; then
-						item=$(echo "$item" | sed 's/^svn:*//')
-						svn checkout $svn_opts $item ${pkgname}_svn_${loc_source}.src
-						cp -a -r "${srcache}/${pkgname}_svn_${loc_source}".src "${srcdir}"
-					fi
-					if [ ! "${strict_version}" -a "${_first}" != "second" ]; then
-						cd "${pkgname}_svn_${loc_source}".src || exit 1
-						pkgver+=_svn`svn info | grep Revi | cut -d ":" -f2 | cut -c2-`
-						cd - >/dev/null || exit 1
-					fi
-					cd - >/dev/null
-					;;
-				git)
-					cd "${srcache}"
-					if [ ! ${ext_arg} ];then 
-						item=$(echo "$item" | sed 's/^git:*//')
-						if [ ! -d "${pkgname}_git_${loc_source}.src" ]; then
-							git clone $item "${pkgname}_git_${loc_source}.src"
-						else
-							cd "${pkgname}_git_${loc_source}".src
-							git pull
-						fi
-						cp -a -r "${srcache}/${pkgname}_git_${loc_source}".src "${srcdir}"
-					fi
-					if [ ! "${strict_version}" -a "${_first}" != "second" ]; then
-						pkgver+=_git`date "+%Y%m%d"`
-					fi
-					cd - >/dev/null
-					;;                           
-				hg)
-					cd "${srcache}"
-					if [ ! ${ext_arg} ];then
-						#cd ${srcache}
-						item=$(echo "$item" | sed 's/^hg:*//')
-						if [ ! -d "${pkgname}_hg_${loc_source}.src" ]; then
-							hg clone $item "${pkgname}_hg_${loc_source}.src"
-						else
-							cd "${pkgname}_hg_${loc_source}.src"
-							hg pull && hg update  
-						fi
-						cp -a -r "${srcache}/${pkgname}_hg_${loc_source}".src "${srcdir}"
-					fi
-					if [ ! "${strict_version}" -a "${_first}" != "second" ]; then
-						pkgver+=_hg`date "+%Y%m%d"`
-					fi
-					cd - >/dev/null
-					;;                           
-				bzr)
-					cd "${srcache}"
-					if [ ! ${ext_arg} ];then
-						cd "${srcache}"
-						item=$(echo $item | sed 's/^bzr:*//')
-						loc_source=${pkgname}
-						if [ ! -d "${loc_source}.src" ]; then
-							bzr branch $item "${loc_source}.src"
-						else
-							cd "${pkgname}.src"
-							bzr merge
-							if [ "$?" != "0" ]; then 
-								cd ..
-								d_echo "deleting corrupted bzr archive"
-								rm -rf "${loc_source}.src"
-								bzr branch $item "${loc_source}.src"
-							fi
-						fi
-						cp -a -r "${srcache}/${loc_source}".src "${srcdir}"
-					fi
-					if [ ! "${strict_version}" -a "${_first}" != "second" ]; then
-						cd "${srcache}/${loc_source}.src" || exit 1
-						local bzr_rev=mkpkg_${pkgname}
-						bzr log -r -1 lp:${pkgname} | grep revno: | cut -d " " -f2 > ${bzr_rev}
-						pkgver+=_bzr`cat ${bzr_rev}`
-						rm -f ${bzr_rev}
-						echo "setting to ${pkgver}"
-						cd - >/dev/null
-					fi
-					cd - >/dev/null
-					;;
+         if [ -f "${srcache}/$loc_source" ]; then
+            item="$loc_source"
+         fi
 
-				*)
-					if [ ! "${ifn}" = "n" -a -z "${ext_arg}" ]; then
-						unpack "${srcache}/$loc_source" || exit 1
-					fi
-					;;
-			esac
-			if [ "$(parent_package)" -a ! ${strict_version} ]; then 
-				modif_version=${pkgver}
-				
-			fi
-		done
-		loc_source_count=${#source[@]}
-	fi
+         local protocol=$(echo "$item" | sed 's|:.*||')
+         d_echo "   Discover source file ${item} download protocol as '$protocol'"
+         case ${protocol} in
+              http|ftp|https)
+                if [ ! "${ext_arg}" ]; then
+                   wget -c --no-check-certificate ${wgetopts} -O "${srcache}/${loc_source}".part $item  || exit 1
+                   mv "${srcache}/${loc_source}".part "${srcache}/${loc_source}"
+                   if [ ! "$ifn" = "n" ]; then
+                      unpack "${srcache}/$loc_source"  || exit 1
+                   fi
+               fi
+             ;;
+             svn)
+               cd "${srcache}"
+               if [ ! ${ext_arg} ]; then
+                  item=$(echo "$item" | sed 's/^svn:*//')
+                  svn checkout $svn_opts $item ${pkgname}_svn_${loc_source}.src
+                  cp -a -r "${srcache}/${pkgname}_svn_${loc_source}".src "${srcdir}"
+               fi
+               if [ ! "${strict_version}" -a "${_first}" != "second" ]; then
+                  cd "${pkgname}_svn_${loc_source}".src || exit 1
+                  pkgver+=_svn`svn info | grep Revi | cut -d ":" -f2 | cut -c2-`
+                  cd - >/dev/null || exit 1
+               fi
+               cd - >/dev/null
+            ;;
+            git)
+              cd "${srcache}"
+              if [ ! ${ext_arg} ];then 
+                 item=$(echo "$item" | sed 's/^git:*//')
+                 echo "$git_commit --- $item"
+                 if [ ! -d "${pkgname}_git_${loc_source}.src" ]; then
+                    git clone $item "${pkgname}_git_${loc_source}.src"
+                 else
+                    cd "${pkgname}_git_${loc_source}".src
+                    git pull
+                 fi
+                 if [ -n "${git_commit}" ]; then
+                    echo "git checkout ${git_commit}"
+                    git checkout "${git_commit}"
+                 fi
+                 cp -a -r "${srcache}/${pkgname}_git_${loc_source}".src "${srcdir}"
+              fi
+              if [ ! "${strict_version}" -a "${_first}" != "second" ]; then
+                 pkgver+=_git`date "+%Y%m%d"`
+              fi
+              cd - >/dev/null
+           ;;
+           hg)
+             cd "${srcache}"
+             if [ ! ${ext_arg} ];then
+                #cd ${srcache}
+                item=$(echo "$item" | sed 's/^hg:*//')
+                if [ ! -d "${pkgname}_hg_${loc_source}.src" ]; then
+                   hg clone $item "${pkgname}_hg_${loc_source}.src"
+                else
+                   cd "${pkgname}_hg_${loc_source}.src"
+                   hg pull && hg update  
+                fi
+                cp -a -r "${srcache}/${pkgname}_hg_${loc_source}".src "${srcdir}"
+             fi
+             if [ ! "${strict_version}" -a "${_first}" != "second" ]; then
+                pkgver+=_hg`date "+%Y%m%d"`
+             fi
+             cd - >/dev/null
+           ;;
+           bzr)
+             cd "${srcache}"
+             if [ ! ${ext_arg} ];then
+                cd "${srcache}"
+                item=$(echo $item | sed 's/^bzr:*//')
+                loc_source=${pkgname}
+                if [ ! -d "${loc_source}.src" ]; then
+                   bzr branch $item "${loc_source}.src"
+                else
+                   cd "${pkgname}.src"
+                   bzr merge
+                   if [ "$?" != "0" ]; then 
+                      cd ..
+                      d_echo "deleting corrupted bzr archive"
+                      rm -rf "${loc_source}.src"
+                      bzr branch $item "${loc_source}.src"
+                   fi
+                fi
+                cp -a -r "${srcache}/${loc_source}".src "${srcdir}"
+             fi
+             if [ ! "${strict_version}" -a "${_first}" != "second" ]; then
+                cd "${srcache}/${loc_source}.src" || exit 1
+                local bzr_rev=mkpkg_${pkgname}
+                bzr log -r -1 lp:${pkgname} | grep revno: | cut -d " " -f2 > ${bzr_rev}
+                pkgver+=_bzr`cat ${bzr_rev}`
+                rm -f ${bzr_rev}
+                echo "setting to ${pkgver}"
+                cd - >/dev/null
+             fi
+             cd - >/dev/null
+           ;;
+           *)
+             if [ ! "${ifn}" = "n" -a -z "${ext_arg}" ]; then
+                unpack "${srcache}/$loc_source" || exit 1
+             fi
+           ;;
+         esac
+           if [ "$(parent_package)" -a ! ${strict_version} ]; then
+              modif_version=${pkgver}
+           fi
+    done
+    loc_source_count=${#source[@]}
+  fi
 }
  
 unpack()
